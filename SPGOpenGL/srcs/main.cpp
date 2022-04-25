@@ -1,18 +1,9 @@
-﻿#include <iostream>
-#include <fstream>
-#include <string>
-#include <stdio.h>
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-#include <glm/mat4x4.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/constants.hpp>
-#include "Planet.h"
+﻿#include "Planet.h"
 #include "Camera.h"
 #include "ShaderManager.h"
 #include <stack>
 #include <time.h>
+#include <iostream>
 
 #define PI glm::pi<float>()
 #define FPS 120
@@ -21,54 +12,50 @@
 	Poate fac batch rendering calumea candva, sau alte optimizari in loc de VBO pentru fiecare obiet
 */
 
+FlyweightObjectComponent* sphereComp;
+FlyweightObjectComponent* scratComp;
 
 Camera* camera;
-std::vector< float > allObjectsData;
-std::stack<glm::mat4> modelStack;
 Planet* planetObject;
+Object* scratObject;
 ShaderManager* shaderManager;
-FlyweightObjectComponent sphereComp;
-FlyweightObjectComponent scratComp;
-GLuint vaoObj, vboObj;
+
+GLuint vaoObj;
 glm::mat4 modelMatrix;
+std::stack<glm::mat4> modelStack;
+
 int frame_count = 0;
 int start_time,final_time;
 
 glm::vec3 lightPos(0, 20000, 0);
 glm::vec3 viewPos(2, 3, 6);
 
-float axisRotAngle = PI / 16.0; // unghiul de rotatie in jurul propriei axe
-float radius = 2;
 float scaleFactor = 0.1;
 
 void init()
 {
-	Vertex::init();
-	//std::cout << "Size of glm::vec3: " << sizeof(glm::vec3) << '\n';
-	//std::cout << "Size of float[3]: " << sizeof(float[3]) << '\n';
-	sphereComp = FlyweightObjectComponent(0);
-	sphereComp.loadOBJFile("obj/sphere.obj");
-
-	scratComp = FlyweightObjectComponent(1);
-	scratComp.loadOBJFile("obj/scrat.obj");
-
-	camera = new Camera(1024,720,glm::vec3(10,12,30));
-
-	planetObject = new Planet(sphereComp, 0, PI / 16, 8.0, PI / 8, PI / 32);
-
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(1, 1, 1, 0);
-
 	glewInit();
 
-	allObjectsData = sphereComp.completeData;
-	allObjectsData.insert(allObjectsData.end(), scratComp.completeData.begin(), scratComp.completeData.end());
+	Vertex::init();
 
-	glGenBuffers(1, &vboObj);
-	glBindBuffer(GL_ARRAY_BUFFER, vboObj);
-	glBufferData(GL_ARRAY_BUFFER, sphereComp.getDataSize() + scratComp.getDataSize(), allObjectsData.data(), GL_DYNAMIC_DRAW);
+	sphereComp = new FlyweightObjectComponent();
+	scratComp = new FlyweightObjectComponent();
+
+	sphereComp->loadOBJFile("obj/sphere.obj");
+	scratComp->loadOBJFile("obj/scrat.obj");
+
+	camera = new Camera(1024,720,glm::vec3(10,12,30));
+	planetObject = new Planet(sphereComp, 0, PI / 128, 3.0, PI / 8, PI / 128);
+	scratObject = new Object(scratComp);
+	shaderManager = new ShaderManager();
 
 	glGenVertexArrays(1, &vaoObj);
+}
+
+void setUpVAO()
+{
 	glBindVertexArray(vaoObj);
 
 	glEnableVertexAttribArray(0);
@@ -76,16 +63,19 @@ void init()
 
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::offsettOf("normals"));
+}
 
-	shaderManager = new ShaderManager();
+void drawObject(FlyweightObjectComponent* comp)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, comp->vbo);
+	setUpVAO();
+	glDrawArrays(GL_TRIANGLES, 0, comp->vertexVec.size());
 }
 
 void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shaderManager->getShaderProgramme());
-
-	glBindVertexArray(vaoObj);
 
 	GLuint lightPosLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "lightPos");
 	glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
@@ -94,7 +84,8 @@ void display()
 	glUniform3fv(viewPosLoc, 1, glm::value_ptr(viewPos));
 
 	modelMatrix = glm::mat4(); // matricea de modelare este matricea identitate
-	//planetObject->move();
+	planetObject->move();
+	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 	modelMatrix *= planetObject->rotateAroundOrbit();
 	modelMatrix *= planetObject->moveOnOrbit();
 	modelMatrix *= planetObject->rotateAroundAxis();
@@ -107,8 +98,17 @@ void display()
 	GLuint normalMatrixLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "normalMatrix");
 	glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-	glBindBuffer(GL_ARRAY_BUFFER, vboObj);
-	glDrawArrays(GL_TRIANGLES, 0, sphereComp.vertexVec.size());
+	drawObject(planetObject->baseData);
+
+	modelMatrix = glm::mat4(); // matricea de modelare este matricea identitate
+	modelMatrix *= glm::rotate(PI / 16.0f, glm::vec3(0, 1, 0));
+	modelMatrix *= glm::scale(glm::vec3(scaleFactor / 10.0f, scaleFactor / 10.0f, scaleFactor / 10.0f));
+	normalMatrix = glm::transpose(glm::inverse(modelMatrix));
+
+	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix));
+	glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+
+	drawObject(scratObject->baseData);
 
 	glutSwapBuffers();
 }
@@ -139,21 +139,14 @@ void keyboard(unsigned char key, int x, int y)
 		camera->move(RIGHT);
 	}
 	if( key == '+'){
-		scaleFactor += 0.01;
+		//scaleFactor += 0.01;
+		camera->move(FORWARDS);
 	}
 	if( key == '-'){
-		scaleFactor -= 0.01;
+		//scaleFactor -= 0.01;
+		camera->move(BACKWARDS);
 	}
-	//glutPostRedisplay(); // cauzeaza redesenarea ferestrei
 }
-
-//void My_mouse_routine(int x, int y)
-//{
-//
-//	directieX = (x - 350) / 500.0f;// place current mouse pos in mouse_x
-//	directieY= (y - 350) / 500.0f;
-//	glutPostRedisplay();
-//}
 
 void frameFunc(int) {
 	frame_count++;

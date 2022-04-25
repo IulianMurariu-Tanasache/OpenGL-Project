@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Attribute.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\FlyweightObjectComponent.h" />
     <ClInclude Include="include\Object.h" />

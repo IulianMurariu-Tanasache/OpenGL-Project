@@ -2,6 +2,7 @@
 #include "objloader.hpp"
 #include <iostream>
 
+
 void FlyweightObjectComponent::loadOBJFile(const char* fileName)
 {
 	//sa fac ceva cu uv-urile astea?
@@ -30,6 +31,11 @@ void FlyweightObjectComponent::loadOBJFile(const char* fileName)
 		//v.uvs = _uvs.at(i);
 		this->vertexVec.push_back(v);
 	}
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, this->getDataSize(), (void*)this->completeData.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 
@@ -37,3 +43,6 @@ std::size_t FlyweightObjectComponent::getDataSize()
 {
 	return vertexVec.size() * sizeof(Vertex);
 }
+
+FlyweightObjectComponent::FlyweightObjectComponent()
+{}

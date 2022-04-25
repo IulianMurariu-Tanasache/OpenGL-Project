@@ -7,8 +7,8 @@ enum Direction {
 
 class Camera {
 	private:
-		const float moveSpeed = 0.3f;
-		const float rotationSpeed = 0.3f;
+		const float moveSpeed = 0.5f;
+		const float rotationSpeed = 0.5f;
 		glm::mat4 projectionMatrix, viewMatrix;
 		glm::vec3 initPos;
 		//float xv = 10, yv = 12, zv = 30; //originea sistemului de observare
