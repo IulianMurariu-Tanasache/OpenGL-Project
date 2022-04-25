@@ -1,38 +1,74 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="src">
-      <UniqueIdentifier>{01f25f6b-60e7-4302-8453-2b6a0d032c6f}</UniqueIdentifier>
+    <Filter Include="srcs">
+      <UniqueIdentifier>{37997e08-16c7-450c-8237-443b48deac28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{8a0da2e1-d732-4be9-9f19-31f120bf2fd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{b09966c0-8677-449a-8a41-8bc1e293324e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fragment.frag">
-      <Filter>src</Filter>
-    </None>
-    <None Include="vertex.vert">
-      <Filter>src</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="objloader.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="Object.cpp" />
-    <ClCompile Include="FlyweightObjectComponent.cpp" />
-    <ClCompile Include="Planet.cpp" />
-    <ClCompile Include="Camera.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="objloader.hpp">
-      <Filter>src</Filter>
+    <ClInclude Include="include\Attribute.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="Object.h" />
-    <ClInclude Include="FlyweightObjectComponent.h" />
-    <ClInclude Include="Attribute.h" />
-    <ClInclude Include="Planet.h" />
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="include\Camera.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FlyweightObjectComponent.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Object.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\objloader.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Planet.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ShaderManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Vertex.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\fragment.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\vertex.vert">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="srcs\Camera.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\FlyweightObjectComponent.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\main.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\Object.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\objloader.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\Planet.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\ShaderManager.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\Vertex.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

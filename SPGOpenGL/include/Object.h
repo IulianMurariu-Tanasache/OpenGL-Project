@@ -5,7 +5,6 @@
 
 class Object {
 	protected:
-		int index;
 		std::shared_ptr<FlyweightObjectComponent> baseData;
 
 	public:
@@ -17,7 +16,7 @@ class Object {
 
 		glm::mat4 getModelMatrix();
 
-		Object(FlyweightObjectComponent component, int indexInBuffer);
+		Object(FlyweightObjectComponent component);
 		std::shared_ptr<FlyweightObjectComponent> shareBaseData();
 		void scale(glm::vec3 coord);
 		void rotate(float angle, glm::vec3 axis);

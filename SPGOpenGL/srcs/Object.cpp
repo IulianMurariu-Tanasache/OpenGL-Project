@@ -1,10 +1,9 @@
 #include "Object.h"
 
-Object::Object(FlyweightObjectComponent component, int indexInBuffer) 
+Object::Object(FlyweightObjectComponent component) 
 {
 	reset();
 	visible = true;
-	index = indexInBuffer;
 	baseData = std::make_shared<FlyweightObjectComponent>(component);
 }
 

@@ -12,16 +12,27 @@
 #include "Camera.h"
 #include "ShaderManager.h"
 #include <stack>
+#include <time.h>
 
 #define PI glm::pi<float>()
+#define FPS 120
+
+/*
+	Poate fac batch rendering calumea candva, sau alte optimizari in loc de VBO pentru fiecare obiet
+*/
+
 
 Camera* camera;
+std::vector< float > allObjectsData;
 std::stack<glm::mat4> modelStack;
 Planet* planetObject;
 ShaderManager* shaderManager;
 FlyweightObjectComponent sphereComp;
+FlyweightObjectComponent scratComp;
 GLuint vaoObj, vboObj;
 glm::mat4 modelMatrix;
+int frame_count = 0;
+int start_time,final_time;
 
 glm::vec3 lightPos(0, 20000, 0);
 glm::vec3 viewPos(2, 3, 6);
@@ -32,31 +43,39 @@ float scaleFactor = 0.1;
 
 void init()
 {
-
-	sphereComp = FlyweightObjectComponent();
+	Vertex::init();
+	//std::cout << "Size of glm::vec3: " << sizeof(glm::vec3) << '\n';
+	//std::cout << "Size of float[3]: " << sizeof(float[3]) << '\n';
+	sphereComp = FlyweightObjectComponent(0);
 	sphereComp.loadOBJFile("obj/sphere.obj");
+
+	scratComp = FlyweightObjectComponent(1);
+	scratComp.loadOBJFile("obj/scrat.obj");
 
 	camera = new Camera(1024,720,glm::vec3(10,12,30));
 
-	planetObject = new Planet(sphereComp, 1, 0, PI / 16, 8.0, PI / 8, PI / 32);
+	planetObject = new Planet(sphereComp, 0, PI / 16, 8.0, PI / 8, PI / 32);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(1, 1, 1, 0);
 
 	glewInit();
 
+	allObjectsData = sphereComp.completeData;
+	allObjectsData.insert(allObjectsData.end(), scratComp.completeData.begin(), scratComp.completeData.end());
+
 	glGenBuffers(1, &vboObj);
 	glBindBuffer(GL_ARRAY_BUFFER, vboObj);
-	glBufferData(GL_ARRAY_BUFFER, sphereComp.getDataSize(), (void*)sphereComp.completeData.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sphereComp.getDataSize() + scratComp.getDataSize(), allObjectsData.data(), GL_DYNAMIC_DRAW);
 
 	glGenVertexArrays(1, &vaoObj);
 	glBindVertexArray(vaoObj);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::offsettOf("position"));
 
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)(sphereComp.vertices.data.size() * sizeof(float) * 3));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::offsettOf("normals"));
 
 	shaderManager = new ShaderManager();
 }
@@ -80,14 +99,16 @@ void display()
 	modelMatrix *= planetObject->moveOnOrbit();
 	modelMatrix *= planetObject->rotateAroundAxis();
 	modelMatrix *= glm::scale(glm::vec3(scaleFactor, scaleFactor, scaleFactor));
+	glm::mat4 normalMatrix = glm::transpose(glm::inverse(modelMatrix));
+
 	GLuint modelMatrixLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "modelViewProjectionMatrix");
 	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix));
 
-	glm::mat4 normalMatrix = glm::transpose(glm::inverse(modelMatrix));
 	GLuint normalMatrixLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "normalMatrix");
 	glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-	glDrawArrays(GL_TRIANGLES, 0, sphereComp.vertices.data.size());
+	glBindBuffer(GL_ARRAY_BUFFER, vboObj);
+	glDrawArrays(GL_TRIANGLES, 0, sphereComp.vertexVec.size());
 
 	glutSwapBuffers();
 }
@@ -99,46 +120,31 @@ void reshape(int w, int h)
 
 void keyboard(unsigned char key, int x, int y)
 {
-	switch (key)
-	{
-	case 'q':
-		axisRotAngle += 0.1;
-		if (axisRotAngle > 2 * PI) 
-			axisRotAngle = 0;
-
-		break;
-	case 'e':
-
-		axisRotAngle -= 0.1;
-		if (axisRotAngle < 0)
-			axisRotAngle = 2 * PI;
-		break;
-
-	case 'w':
-		camera->move(FORWARDS);
-		break;
-	case 's':
-		camera->move(BACKWARDS);
-		break;
-	case 'z':
+	if( key == 'w'){
+		camera->move(DOWN);
+	}
+	if( key == 's'){
+		camera->move(UP);
+	}
+	if( key == 'z'){
 		camera->rotate(LEFT);
-		break;
-	case 'x':
+	}
+	if( key == 'x'){
 		camera->rotate(RIGHT);
-		break;
-	case 'a':
+	}
+	if( key == 'a'){
 		camera->move(LEFT);
-		break;
-	case 'd':
+	}
+	if( key == 'd'){
 		camera->move(RIGHT);
-		break;
-	case '+':
+	}
+	if( key == '+'){
 		scaleFactor += 0.01;
-		break;
-	case '-':
+	}
+	if( key == '-'){
 		scaleFactor -= 0.01;
-	};
-	glutPostRedisplay(); // cauzeaza redesenarea ferestrei
+	}
+	//glutPostRedisplay(); // cauzeaza redesenarea ferestrei
 }
 
 //void My_mouse_routine(int x, int y)
@@ -148,6 +154,18 @@ void keyboard(unsigned char key, int x, int y)
 //	directieY= (y - 350) / 500.0f;
 //	glutPostRedisplay();
 //}
+
+void frameFunc(int) {
+	frame_count++;
+	final_time = time(NULL);
+	if (final_time - start_time > 0) {
+		std::cout << "FPS: " << frame_count << std::endl;
+		frame_count = 0;
+		start_time = final_time;
+	}
+	glutPostRedisplay();
+	glutTimerFunc(1000 / FPS, frameFunc, 0);
+}
 
 int main(int argc, char** argv)
 {
@@ -161,6 +179,8 @@ int main(int argc, char** argv)
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
+	start_time = time(NULL);
+	glutTimerFunc(1000 / FPS, frameFunc, 0);
 	//glutPassiveMotionFunc(My_mouse_routine);
 	glutMainLoop();
 
