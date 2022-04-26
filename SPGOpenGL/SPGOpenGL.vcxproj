@@ -25,6 +25,7 @@
     <ClInclude Include="include\objloader.hpp" />
     <ClInclude Include="include\Planet.h" />
     <ClInclude Include="include\ShaderManager.h" />
+    <ClInclude Include="include\VAOObject.h" />
     <ClInclude Include="include\Vertex.h" />
   </ItemGroup>
   <ItemGroup>
@@ -39,7 +40,7 @@
     <ClCompile Include="srcs\objloader.cpp" />
     <ClCompile Include="srcs\Planet.cpp" />
     <ClCompile Include="srcs\ShaderManager.cpp" />
-    <ClCompile Include="srcs\Vertex.cpp" />
+    <ClCompile Include="srcs\VAOObject.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{98D31254-17D8-41DA-A4C4-778E93D6AADC}</ProjectGuid>

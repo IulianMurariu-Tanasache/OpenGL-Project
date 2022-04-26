@@ -33,6 +33,9 @@
     <ClInclude Include="include\Vertex.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\VAOObject.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.frag">
@@ -64,7 +67,7 @@
     <ClCompile Include="srcs\ShaderManager.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
-    <ClCompile Include="srcs\Vertex.cpp">
+    <ClCompile Include="srcs\VAOObject.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
   </ItemGroup>

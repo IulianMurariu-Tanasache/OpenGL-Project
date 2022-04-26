@@ -1,6 +1,7 @@
 ﻿#include "Planet.h"
 #include "Camera.h"
 #include "ShaderManager.h"
+#include "VAOObject.h"
 #include <stack>
 #include <time.h>
 #include <iostream>
@@ -15,17 +16,20 @@
 FlyweightObjectComponent* sphereComp;
 FlyweightObjectComponent* scratComp;
 
+VAOObject* vaoObj;
+
 Camera* camera;
 Planet* planetObject;
 Object* scratObject;
 ShaderManager* shaderManager;
 
-GLuint vaoObj;
 glm::mat4 modelMatrix;
 std::stack<glm::mat4> modelStack;
 
 int frame_count = 0;
 int start_time,final_time;
+int deltaTime = 0.0f;	// Time between current frame and last frame
+int lastFrameTime = 0.0f; // Time of last frame
 
 glm::vec3 lightPos(0, 20000, 0);
 glm::vec3 viewPos(2, 3, 6);
@@ -38,7 +42,7 @@ void init()
 	glClearColor(1, 1, 1, 0);
 	glewInit();
 
-	Vertex::init();
+	vaoObj = new VAOObject();
 
 	sphereComp = new FlyweightObjectComponent();
 	scratComp = new FlyweightObjectComponent();
@@ -50,25 +54,14 @@ void init()
 	planetObject = new Planet(sphereComp, 0, PI / 128, 3.0, PI / 8, PI / 128);
 	scratObject = new Object(scratComp);
 	shaderManager = new ShaderManager();
-
-	glGenVertexArrays(1, &vaoObj);
 }
 
-void setUpVAO()
-{
-	glBindVertexArray(vaoObj);
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::offsettOf("position"));
-
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::offsettOf("normals"));
-}
 
 void drawObject(FlyweightObjectComponent* comp)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, comp->vbo);
-	setUpVAO();
+	vaoObj->bind();
 	glDrawArrays(GL_TRIANGLES, 0, comp->vertexVec.size());
 }
 
@@ -121,35 +114,39 @@ void reshape(int w, int h)
 void keyboard(unsigned char key, int x, int y)
 {
 	if( key == 'w'){
-		camera->move(DOWN);
+		camera->move(DOWN, deltaTime);
 	}
 	if( key == 's'){
-		camera->move(UP);
-	}
-	if( key == 'z'){
-		camera->rotate(LEFT);
-	}
-	if( key == 'x'){
-		camera->rotate(RIGHT);
+		camera->move(UP, deltaTime);
 	}
 	if( key == 'a'){
-		camera->move(LEFT);
+		camera->move(LEFT, deltaTime);
 	}
 	if( key == 'd'){
-		camera->move(RIGHT);
+		camera->move(RIGHT, deltaTime);
+	}
+	if( key == 'z'){
+		camera->rotate(LEFT, deltaTime);
+	}
+	if( key == 'x'){
+		camera->rotate(RIGHT, deltaTime);
 	}
 	if( key == '+'){
 		//scaleFactor += 0.01;
-		camera->move(FORWARDS);
+		camera->move(FORWARDS, deltaTime);
 	}
 	if( key == '-'){
 		//scaleFactor -= 0.01;
-		camera->move(BACKWARDS);
+		camera->move(BACKWARDS, deltaTime);
 	}
 }
 
 void frameFunc(int) {
 	frame_count++;
+	int currentFrame = glutGet(GLUT_ELAPSED_TIME); 
+	deltaTime = currentFrame - lastFrameTime;
+	lastFrameTime = currentFrame;
+
 	final_time = time(NULL);
 	if (final_time - start_time > 0) {
 		std::cout << "FPS: " << frame_count << std::endl;
