@@ -2,6 +2,7 @@
 #include "Camera.h"
 #include "ShaderManager.h"
 #include "VAOObject.h"
+#include "BoundingSphere.h"
 #include <stack>
 #include <time.h>
 #include <iostream>
@@ -19,6 +20,7 @@ FlyweightObjectComponent* scratComp;
 VAOObject* vaoObj;
 
 Camera* camera;
+Frustrum* frustrum;
 Planet* planetObject;
 Object* scratObject;
 ShaderManager* shaderManager;
@@ -50,13 +52,11 @@ void init()
 	sphereComp->loadOBJFile("obj/sphere.obj");
 	scratComp->loadOBJFile("obj/scrat.obj");
 
-	camera = new Camera(1024,720,glm::vec3(10,12,30));
+	camera = new Camera(1024,720,glm::vec3(5,5,20));
 	planetObject = new Planet(sphereComp, 0, PI / 128, 3.0, PI / 8, PI / 128);
 	scratObject = new Object(scratComp);
 	shaderManager = new ShaderManager();
 }
-
-
 
 void drawObject(FlyweightObjectComponent* comp)
 {
@@ -74,9 +74,9 @@ void display()
 	glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
 
 	GLuint viewPosLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "viewPos");
-	glUniform3fv(viewPosLoc, 1, glm::value_ptr(viewPos));
+	glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera->cameraPos));
 
-	modelMatrix = glm::mat4(); // matricea de modelare este matricea identitate
+	modelMatrix = glm::mat4();
 	planetObject->move();
 	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 	modelMatrix *= planetObject->rotateAroundOrbit();
@@ -101,7 +101,11 @@ void display()
 	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix));
 	glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-	drawObject(scratObject->baseData);
+	frustrum = new Frustrum(*camera);
+	if (scratObject->baseData->baseVolume->isOnFrustrum(*frustrum, modelMatrix, glm::vec3(scaleFactor / 10.0f, scaleFactor / 10.0f, scaleFactor / 10.0f))) {
+		drawObject(scratObject->baseData);
+	}
+	std::cout << "E scratch visible? " << scratObject->baseData->baseVolume->isOnFrustrum(*frustrum, modelMatrix, glm::vec3(scaleFactor / 10.0f, scaleFactor / 10.0f, scaleFactor / 10.0f)) << '\n';
 
 	glutSwapBuffers();
 }

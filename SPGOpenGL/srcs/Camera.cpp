@@ -6,15 +6,19 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/constants.hpp>
-#define PI glm::pi<float>()
 
-Camera::Camera(int w, int h, glm::vec3 initPos)
+Camera::Camera(int w, int h, glm::vec3 initPos, float fov, float zNear, float zFar)
 {
 	cameraPos = initPos;
 	cameraUp = glm::vec3(0, 1, 0);
 	cameraFront = glm::vec3(0, 0, -1);
+	cameraRight = glm::cross(cameraFront, cameraUp);
 	rotationVec3 = glm::vec3(-90.0f, 0, 0);
-	projectionMatrix = glm::perspective(PI / 4, (float)w / h, 0.1f, 100.0f);
+	projectionMatrix = glm::perspective(fov, (float)w / h, zNear, zFar);
+	this->fov = fov;
+	this->zNear = zNear;
+	this->zFar = zFar;
+	this->aspect = (float)w / h;
 	viewMatrix = glm::lookAt(cameraPos,cameraPos + cameraFront, cameraUp);
 }
 
@@ -80,6 +84,7 @@ void Camera::rotate(Direction dir, int deltaTime)
 
 glm::mat4 Camera::getViewMatrix() 
 {
+	//frustrum = new Frustrum(*this);
 	viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	return viewMatrix;
 }

@@ -36,6 +36,18 @@
     <ClInclude Include="include\VAOObject.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Plane.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Frustrum.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BoundingVolume.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BoundingSphere.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.frag">
@@ -68,6 +80,15 @@
       <Filter>srcs</Filter>
     </ClCompile>
     <ClCompile Include="srcs\VAOObject.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\Frustrum.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="include\Plane.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\BoundingSphere.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
   </ItemGroup>

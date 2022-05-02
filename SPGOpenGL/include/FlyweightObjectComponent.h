@@ -2,6 +2,7 @@
 #include "Vertex.h"
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#include "BoundingSphere.h"
 
 class FlyweightObjectComponent {
 	public:
@@ -9,6 +10,7 @@ class FlyweightObjectComponent {
 		std::vector< Vertex > vertexVec;
 		std::vector< float > completeData;
 		GLuint vbo;
+		Volume* baseVolume;
 
 		FlyweightObjectComponent();
 		//FlyweightObjectComponent(int index) : FlyweightObjectComponent() { indexInBuffer = index; }
