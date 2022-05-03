@@ -8,8 +8,8 @@ VAOObject::VAOObject()
 
 	attributeMap.insert(std::pair<const char*, std::size_t>("position", 0));
 	attributeMap.insert(std::pair<const char*, std::size_t>("normals", sizeof(Vertex::position)));
-	//VAOObject::attributeMap.insert(std::pair<const char*, std::size_t>("color", attributeMap.at("normals") + sizeof((Vertex::normals)));
-	//VAOObject::attributeMap.insert(std::pair<const char*, std::size_t>("uvs", attributeMap.at("color") + sizeof((Vertex::color)));
+	attributeMap.insert(std::pair<const char*, std::size_t>("uvs", attributeMap.at("normals") + sizeof(Vertex::normals)));
+	//attributeMap.insert(std::pair<const char*, std::size_t>("color", attributeMap.at("normals") + sizeof((Vertex::normals)));
 }
 
 VAOObject::~VAOObject()
@@ -39,4 +39,7 @@ void VAOObject::bind()
 
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride(), (void*)offsettOf("normals"));
+
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride(), (void*)offsettOf("uvs"));
 }

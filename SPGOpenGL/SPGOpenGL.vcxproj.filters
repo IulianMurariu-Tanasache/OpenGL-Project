@@ -48,6 +48,12 @@
     <ClInclude Include="include\BoundingSphere.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Texture.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stb_image.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.frag">
@@ -89,6 +95,12 @@
       <Filter>srcs</Filter>
     </ClCompile>
     <ClCompile Include="srcs\Plane.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\Texture.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\stb_compile.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
   </ItemGroup>

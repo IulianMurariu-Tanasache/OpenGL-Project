@@ -3,6 +3,7 @@
 #include "ShaderManager.h"
 #include "VAOObject.h"
 #include "BoundingSphere.h"
+#include "Texture.h" 
 #include <stack>
 #include <time.h>
 #include <iostream>
@@ -22,7 +23,7 @@
 
 FlyweightObjectComponent* sphereComp;
 FlyweightObjectComponent* scratComp;
-
+Texture* planetMoonTexture;
 VAOObject* vaoObj;
 
 Camera* camera;
@@ -55,8 +56,10 @@ void init()
 	sphereComp = new FlyweightObjectComponent();
 	scratComp = new FlyweightObjectComponent();
 
-	sphereComp->loadOBJFile("obj/sphere.obj");
+	sphereComp->loadOBJFile("obj/sfera-fina.obj");
 	scratComp->loadOBJFile("obj/scrat.obj");
+
+	planetMoonTexture = new Texture("textures/planet_moon.jpg");
 
 	camera = new Camera(1024,720,glm::vec3(5,5,20));
 	planetObject = new Planet(sphereComp, 0, PI / 128, 3.0, PI / 8, PI / 128);
@@ -76,11 +79,16 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shaderManager->getShaderProgramme());
 
+	planetMoonTexture->bind();
+
 	GLuint lightPosLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "lightPos");
 	glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
 
 	GLuint viewPosLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "viewPos");
 	glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera->cameraPos));
+
+	GLuint textureLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "currentTexture");
+	glUniform1i(textureLoc, 0);
 
 	glm::vec3 scale = { 1,1,1 };
 
@@ -115,7 +123,7 @@ void display()
 	if (scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
 		drawObject(scratObject->baseData);
 
-	std::cout << "E scratch visible? " << scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale) << '\n';
+	//std::cout << "E scratch visible? " << scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale) << '\n';
 
 	glutSwapBuffers();
 }
@@ -163,7 +171,7 @@ void frameFunc(int) {
 
 	final_time = time(NULL);
 	if (final_time - start_time > 0) {
-		std::cout << "FPS: " << frame_count << std::endl;
+		//std::cout << "FPS: " << frame_count << std::endl;
 		frame_count = 0;
 		start_time = final_time;
 	}
@@ -175,6 +183,7 @@ void onExit()
 {
 	delete sphereComp;
 	delete scratComp;
+	delete planetMoonTexture;
 	delete vaoObj;
 	delete camera;
 	delete planetObject;

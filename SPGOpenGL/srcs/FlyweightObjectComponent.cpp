@@ -31,10 +31,13 @@ void FlyweightObjectComponent::loadOBJFile(const char* fileName)
 		this->completeData.push_back(_normals.at(i).x);
 		this->completeData.push_back(_normals.at(i).y);
 		this->completeData.push_back(_normals.at(i).z);
+		this->completeData.push_back(_uvs.at(i).x);
+		this->completeData.push_back(_uvs.at(i).y);
+
 		Vertex v = Vertex();
 		v.position = _vertices.at(i);
 		v.normals = _normals.at(i);
-		//v.uvs = _uvs.at(i);
+		v.uvs = _uvs.at(i);
 		this->vertexVec.push_back(v);
 
 		if (_vertices.at(i).x > maxVec.x) maxVec.x = _vertices.at(i).x;
@@ -60,6 +63,9 @@ void FlyweightObjectComponent::loadOBJFile(const char* fileName)
 
 FlyweightObjectComponent::~FlyweightObjectComponent()
 {
+	completeData.clear();
+	vertexVec.clear();
+
 	delete baseVolume;
 	baseVolume = nullptr;
 
