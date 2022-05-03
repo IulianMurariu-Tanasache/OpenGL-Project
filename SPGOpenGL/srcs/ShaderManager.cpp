@@ -50,6 +50,13 @@ ShaderManager::ShaderManager()
 	printShaderInfoLog(fs);
 	printShaderInfoLog(vs);
 	printProgramInfoLog(shader_programme);
+
+	glDeleteShader(shader_programme);
+}
+
+ShaderManager::~ShaderManager()
+{
+	std::cout << "Delete Shader" << '\n';
 }
 
 void ShaderManager::printShaderInfoLog(GLuint obj)

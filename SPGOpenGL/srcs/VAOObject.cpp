@@ -12,6 +12,13 @@ VAOObject::VAOObject()
 	//VAOObject::attributeMap.insert(std::pair<const char*, std::size_t>("uvs", attributeMap.at("color") + sizeof((Vertex::color)));
 }
 
+VAOObject::~VAOObject()
+{
+	attributeMap.clear();
+
+	glBindVertexArray(0);
+	glDeleteBuffers(1, &vaoObj);
+}
 
 std::size_t VAOObject::stride() //distance between consecutive elements of same attribute
 {

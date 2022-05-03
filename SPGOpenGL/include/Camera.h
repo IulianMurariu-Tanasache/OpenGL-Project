@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/gtc/type_ptr.hpp>
+#include "Frustrum.h"
 #define PI glm::pi<float>()
 
 enum Direction {
@@ -20,11 +20,12 @@ class Camera {
 		glm::vec3 cameraRight;
 		glm::vec3 rotationVec3;
 		float fov, aspect, zNear, zFar;
-		//Frustrum* frustrum;
+		Frustrum* frustrum = nullptr;
 		//glm::vec3 scaleVec3;
 		//float scaleFactor = 1;
 
 		Camera(int w, int h, glm::vec3 initPos, float fov = PI / 4, float zNear = 0.1f, float zFar = 100.0f);
+		~Camera();
 		void move(Direction dir, int deltaTime);
 		void rotate(Direction dir, int deltaTime);
 		glm::mat4 getViewMatrix();

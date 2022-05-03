@@ -85,10 +85,10 @@
     <ClCompile Include="srcs\Frustrum.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
-    <ClCompile Include="include\Plane.cpp">
+    <ClCompile Include="srcs\BoundingSphere.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
-    <ClCompile Include="srcs\BoundingSphere.cpp">
+    <ClCompile Include="srcs\Plane.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
   </ItemGroup>

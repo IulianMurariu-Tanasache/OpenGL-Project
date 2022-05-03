@@ -9,6 +9,7 @@ class ShaderManager {
 		GLuint shader_programme;
 	public:
 		ShaderManager();
+		~ShaderManager();
 		void printShaderInfoLog(GLuint obj);
 		void printProgramInfoLog(GLuint obj);
 		std::string textFileRead(char* fn);

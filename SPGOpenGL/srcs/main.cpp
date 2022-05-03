@@ -11,7 +11,13 @@
 #define FPS 120
 
 /*
-	Poate fac batch rendering calumea candva, sau alte optimizari in loc de VBO pentru fiecare obiet
+	Poate fac batch rendering calumea candva, sau alte optimizari in loc de VBO pentru fiecare obiect
+	-skybox
+	-culoare
+	-zoom, schimband nr de vertexuri?
+	-planete si telescop
+	-soare, alta sursa de lumina?
+	-shared_ptr pt flyweightcomp
 */
 
 FlyweightObjectComponent* sphereComp;
@@ -20,7 +26,7 @@ FlyweightObjectComponent* scratComp;
 VAOObject* vaoObj;
 
 Camera* camera;
-Frustrum* frustrum;
+//Frustrum* frustrum;
 Planet* planetObject;
 Object* scratObject;
 ShaderManager* shaderManager;
@@ -76,13 +82,16 @@ void display()
 	GLuint viewPosLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "viewPos");
 	glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera->cameraPos));
 
+	glm::vec3 scale = { 1,1,1 };
+
 	modelMatrix = glm::mat4();
 	planetObject->move();
 	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 	modelMatrix *= planetObject->rotateAroundOrbit();
 	modelMatrix *= planetObject->moveOnOrbit();
 	modelMatrix *= planetObject->rotateAroundAxis();
-	modelMatrix *= glm::scale(glm::vec3(scaleFactor, scaleFactor, scaleFactor));
+	scale = glm::vec3(scaleFactor, scaleFactor, scaleFactor);
+	modelMatrix *= glm::scale(scale);
 	glm::mat4 normalMatrix = glm::transpose(glm::inverse(modelMatrix));
 
 	GLuint modelMatrixLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "modelViewProjectionMatrix");
@@ -91,21 +100,22 @@ void display()
 	GLuint normalMatrixLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "normalMatrix");
 	glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-	drawObject(planetObject->baseData);
+	if (planetObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
+		drawObject(planetObject->baseData);
 
-	modelMatrix = glm::mat4(); // matricea de modelare este matricea identitate
+	modelMatrix = glm::mat4();
 	modelMatrix *= glm::rotate(PI / 16.0f, glm::vec3(0, 1, 0));
-	modelMatrix *= glm::scale(glm::vec3(scaleFactor / 10.0f, scaleFactor / 10.0f, scaleFactor / 10.0f));
+	scale = glm::vec3(scaleFactor / 10.0f, scaleFactor / 10.0f, scaleFactor / 10.0f);
+	modelMatrix *= glm::scale(scale);
 	normalMatrix = glm::transpose(glm::inverse(modelMatrix));
 
 	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix));
 	glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-	frustrum = new Frustrum(*camera);
-	if (scratObject->baseData->baseVolume->isOnFrustrum(*frustrum, modelMatrix, glm::vec3(scaleFactor / 10.0f, scaleFactor / 10.0f, scaleFactor / 10.0f))) {
+	if (scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
 		drawObject(scratObject->baseData);
-	}
-	std::cout << "E scratch visible? " << scratObject->baseData->baseVolume->isOnFrustrum(*frustrum, modelMatrix, glm::vec3(scaleFactor / 10.0f, scaleFactor / 10.0f, scaleFactor / 10.0f)) << '\n';
+
+	std::cout << "E scratch visible? " << scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale) << '\n';
 
 	glutSwapBuffers();
 }
@@ -161,6 +171,17 @@ void frameFunc(int) {
 	glutTimerFunc(1000 / FPS, frameFunc, 0);
 }
 
+void onExit()
+{
+	delete sphereComp;
+	delete scratComp;
+	delete vaoObj;
+	delete camera;
+	delete planetObject;
+	delete scratObject;
+	delete shaderManager;
+}
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
@@ -175,6 +196,7 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(keyboard);
 	start_time = time(NULL);
 	glutTimerFunc(1000 / FPS, frameFunc, 0);
+	atexit(onExit);
 	//glutPassiveMotionFunc(My_mouse_routine);
 	glutMainLoop();
 

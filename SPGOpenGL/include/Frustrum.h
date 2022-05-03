@@ -1,6 +1,6 @@
 #pragma once
 #include "Plane.h"
-#include "Camera.h"
+#include <glm/gtc/type_ptr.hpp>
 
 class Frustrum {
 	public:
@@ -11,5 +11,5 @@ class Frustrum {
 		Plane nearPlane;
 		Plane farPlane;
 		
-		Frustrum(const Camera& cam);
+		Frustrum(const glm::vec3& cameraPos, const glm::vec3& cameraFront, const glm::vec3& cameraRight, const glm::vec3& cameraUp, float zNear, float zFar, float aspect, float fov);
 };

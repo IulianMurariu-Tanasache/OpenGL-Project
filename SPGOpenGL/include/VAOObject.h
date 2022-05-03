@@ -10,6 +10,7 @@ class VAOObject {
 		GLuint vaoObj;
 
 		VAOObject();
+		~VAOObject();
 		std::size_t stride();
 		std::size_t offsettOf(const char* attribute);
 		virtual void bind();

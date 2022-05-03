@@ -20,6 +20,13 @@ Camera::Camera(int w, int h, glm::vec3 initPos, float fov, float zNear, float zF
 	this->zFar = zFar;
 	this->aspect = (float)w / h;
 	viewMatrix = glm::lookAt(cameraPos,cameraPos + cameraFront, cameraUp);
+	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
+}
+
+Camera::~Camera()
+{
+	delete frustrum;
+	frustrum = nullptr;
 }
 
 void Camera::move(Direction dir, int deltaTime)
@@ -45,6 +52,8 @@ void Camera::move(Direction dir, int deltaTime)
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * moveSpeed * (deltaTime / 1000.0f);
 		break;
 	}
+
+	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
 }
 
 void Camera::rotate(Direction dir, int deltaTime)
@@ -80,6 +89,8 @@ void Camera::rotate(Direction dir, int deltaTime)
 	direction.y = sin(glm::radians(rotationVec3.z)) * sin(glm::radians(rotationVec3.y)); 
 	direction.z = sin(glm::radians(rotationVec3.x)) * cos(glm::radians(rotationVec3.y));
 	cameraFront = glm::normalize(direction);
+
+	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
 }
 
 glm::mat4 Camera::getViewMatrix() 

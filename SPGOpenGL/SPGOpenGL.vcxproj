@@ -37,7 +37,6 @@
     <None Include="shaders\vertex.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\Plane.cpp" />
     <ClCompile Include="srcs\BoundingSphere.cpp" />
     <ClCompile Include="srcs\Camera.cpp" />
     <ClCompile Include="srcs\FlyweightObjectComponent.cpp" />
@@ -45,6 +44,7 @@
     <ClCompile Include="srcs\main.cpp" />
     <ClCompile Include="srcs\Object.cpp" />
     <ClCompile Include="srcs\objloader.cpp" />
+    <ClCompile Include="srcs\Plane.cpp" />
     <ClCompile Include="srcs\Planet.cpp" />
     <ClCompile Include="srcs\ShaderManager.cpp" />
     <ClCompile Include="srcs\VAOObject.cpp" />

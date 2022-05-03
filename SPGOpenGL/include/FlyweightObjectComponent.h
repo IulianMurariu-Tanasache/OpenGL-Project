@@ -12,7 +12,8 @@ class FlyweightObjectComponent {
 		GLuint vbo;
 		Volume* baseVolume;
 
-		FlyweightObjectComponent();
+		//FlyweightObjectComponent();
+		~FlyweightObjectComponent();
 		//FlyweightObjectComponent(int index) : FlyweightObjectComponent() { indexInBuffer = index; }
 		void loadOBJFile(const char* fileName);
 		std::size_t getDataSize();

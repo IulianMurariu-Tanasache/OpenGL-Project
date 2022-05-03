@@ -16,8 +16,7 @@ class Planet : public Object {
 			axisRotAngle(_axisRotAngle),
 			axisRotAngleInc(_axisRotAngleInc), orbitDist(_orbitDist),
 			orbitAngle(_orbitAngle), orbitAngleInc(_orbitAngleInc),
-			Object(component)
-		{}
+			Object(component){}
 		void move() override;
 		glm::highp_mat4 rotateAroundAxis();
 		glm::highp_mat4 rotateAroundOrbit();

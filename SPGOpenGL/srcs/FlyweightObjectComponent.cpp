@@ -58,11 +58,17 @@ void FlyweightObjectComponent::loadOBJFile(const char* fileName)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+FlyweightObjectComponent::~FlyweightObjectComponent()
+{
+	delete baseVolume;
+	baseVolume = nullptr;
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &vbo);
+}
+
 
 std::size_t FlyweightObjectComponent::getDataSize()
 {
 	return vertexVec.size() * sizeof(Vertex);
 }
-
-FlyweightObjectComponent::FlyweightObjectComponent()
-{}
