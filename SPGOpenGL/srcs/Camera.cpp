@@ -79,10 +79,10 @@ void Camera::rotate(Direction dir, int deltaTime)
 		rotationVec3.x += rotationSpeed * (deltaTime / 1000.0f);
 		break;
 	}
-	if (rotationVec3.y > 89.0f)
+	/*if (rotationVec3.y > 89.0f)
 		rotationVec3.y = 89.0f;
 	if (rotationVec3.y < -89.0f)
-		rotationVec3.y = -89.0f;
+		rotationVec3.y = -89.0f;*/
 
 	glm::vec3 direction;
 	direction.x = cos(glm::radians(rotationVec3.z)) * cos(glm::radians(rotationVec3.x));

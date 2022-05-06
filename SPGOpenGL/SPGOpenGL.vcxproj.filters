@@ -54,12 +54,27 @@
     <ClInclude Include="include\stb_image.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\SkyboxTexture.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SkyboxVAO.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Skybox.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.frag">
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\vertex.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\vertexSkybox.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\fragmentSkybox.frag">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
@@ -101,6 +116,15 @@
       <Filter>srcs</Filter>
     </ClCompile>
     <ClCompile Include="srcs\stb_compile.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\SkyboxTexture.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="Skybox.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\SkyboxVAO.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
   </ItemGroup>

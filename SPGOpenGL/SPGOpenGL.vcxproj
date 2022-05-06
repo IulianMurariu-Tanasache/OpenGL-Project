@@ -29,6 +29,9 @@
     <ClInclude Include="include\objloader.hpp" />
     <ClInclude Include="include\Planet.h" />
     <ClInclude Include="include\ShaderManager.h" />
+    <ClInclude Include="include\Skybox.h" />
+    <ClInclude Include="include\SkyboxTexture.h" />
+    <ClInclude Include="include\SkyboxVAO.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\VAOObject.h" />
@@ -36,9 +39,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.frag" />
+    <None Include="shaders\fragmentSkybox.frag" />
     <None Include="shaders\vertex.vert" />
+    <None Include="shaders\vertexSkybox.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="srcs\BoundingSphere.cpp" />
     <ClCompile Include="srcs\Camera.cpp" />
     <ClCompile Include="srcs\FlyweightObjectComponent.cpp" />
@@ -49,6 +55,8 @@
     <ClCompile Include="srcs\Plane.cpp" />
     <ClCompile Include="srcs\Planet.cpp" />
     <ClCompile Include="srcs\ShaderManager.cpp" />
+    <ClCompile Include="srcs\SkyboxTexture.cpp" />
+    <ClCompile Include="srcs\SkyboxVAO.cpp" />
     <ClCompile Include="srcs\stb_compile.cpp" />
     <ClCompile Include="srcs\Texture.cpp" />
     <ClCompile Include="srcs\VAOObject.cpp" />
@@ -118,6 +126,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>freeglutd.lib;glew32d.lib;%(AdditionalDependencies)</AdditionalDependencies>

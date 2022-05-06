@@ -10,9 +10,17 @@ ShaderManager::ShaderManager()
 	printf("Renderer: %s\n", renderer);
 	printf("OpenGL version supported %s\n", version);
 
+	shader_programme = loadShader("shaders/vertex.vert", "shaders/fragment.frag");
+	shader_skybox = loadShader("shaders/vertexSkybox.vert", "shaders/fragmentSkybox.frag");
+	//glDeleteShader(shader_programme);
+}
+
+GLuint ShaderManager::loadShader(const char* vert, const char* frag)
+{
+	GLuint shader;
 	//read shader files
-	std::string vstext = textFileRead("shaders/vertex.vert");
-	std::string fstext = textFileRead("shaders/fragment.frag");
+	std::string vstext = textFileRead(vert);
+	std::string fstext = textFileRead(frag);
 	const char* vertex_shader = vstext.c_str();
 	const char* fragment_shader = fstext.c_str();
 
@@ -27,7 +35,7 @@ ShaderManager::ShaderManager()
 	if (!success)
 	{
 		glGetShaderInfoLog(vs, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+		std::cout << "ERROR::SHADER::"<<vert<<"::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
 	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -39,24 +47,26 @@ ShaderManager::ShaderManager()
 	if (!success)
 	{
 		glGetShaderInfoLog(fs, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+		std::cout << "ERROR::SHADER::"<<frag<<"::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
-	shader_programme = glCreateProgram();
-	glAttachShader(shader_programme, fs);
-	glAttachShader(shader_programme, vs);
-	glLinkProgram(shader_programme);
+	shader = glCreateProgram();
+
+	glAttachShader(shader, fs);
+	glAttachShader(shader, vs);
+	glLinkProgram(shader);
 
 	printShaderInfoLog(fs);
 	printShaderInfoLog(vs);
-	printProgramInfoLog(shader_programme);
-
-	glDeleteShader(shader_programme);
+	printProgramInfoLog(shader);
+	return shader;
 }
 
 ShaderManager::~ShaderManager()
 {
 	std::cout << "Delete Shader" << '\n';
+	glDeleteShader(shader_programme);
+	glDeleteShader(shader_skybox);
 }
 
 void ShaderManager::printShaderInfoLog(GLuint obj)
@@ -93,7 +103,7 @@ void ShaderManager::printProgramInfoLog(GLuint obj)
 	}
 }
 
-std::string ShaderManager::textFileRead(char* fn)
+std::string ShaderManager::textFileRead(const char* fn)
 {
 	std::ifstream ifile(fn);
 	std::string filetext;
@@ -109,3 +119,9 @@ GLuint ShaderManager::getShaderProgramme()
 {
 	return shader_programme;
 }
+
+GLuint ShaderManager::getShaderSkybox()
+{
+	return shader_skybox;
+}
+

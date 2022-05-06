@@ -11,7 +11,7 @@ class VAOObject {
 
 		VAOObject();
 		~VAOObject();
-		std::size_t stride();
-		std::size_t offsettOf(const char* attribute);
+		virtual std::size_t stride();
+		virtual std::size_t offsettOf(const char* attribute);
 		virtual void bind();
 };

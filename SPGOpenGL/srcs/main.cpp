@@ -4,9 +4,11 @@
 #include "VAOObject.h"
 #include "BoundingSphere.h"
 #include "Texture.h" 
+#include "Skybox.h"
 #include <stack>
 #include <time.h>
 #include <iostream>
+#include "stb_image.h"
 
 #define PI glm::pi<float>()
 #define FPS 120
@@ -19,6 +21,8 @@
 	-planete si telescop
 	-soare, alta sursa de lumina?
 	-shared_ptr pt flyweightcomp
+	-make vbo and vao more generic
+	-shader location for uniforms make initially and store them
 */
 
 FlyweightObjectComponent* sphereComp;
@@ -27,10 +31,10 @@ Texture* planetMoonTexture;
 VAOObject* vaoObj;
 
 Camera* camera;
-//Frustrum* frustrum;
 Planet* planetObject;
 Object* scratObject;
 ShaderManager* shaderManager;
+Skybox* skybox;
 
 glm::mat4 modelMatrix;
 std::stack<glm::mat4> modelStack;
@@ -44,7 +48,6 @@ glm::vec3 lightPos(0, 20000, 0);
 glm::vec3 viewPos(2, 3, 6);
 
 float scaleFactor = 0.1;
-
 void init()
 {
 	glEnable(GL_DEPTH_TEST);
@@ -65,7 +68,19 @@ void init()
 	planetObject = new Planet(sphereComp, 0, PI / 128, 3.0, PI / 8, PI / 128);
 	scratObject = new Object(scratComp);
 	shaderManager = new ShaderManager();
+
+	std::vector<std::string> faces = {
+		    "textures/skybox/right.jpg",
+			"textures/skybox/left.jpg",
+			"textures/skybox/top.jpg",
+			"textures/skybox/bottom.jpg",
+			"textures/skybox/front.jpg",
+			"textures/skybox/back.jpg"
+	};
+	skybox = new Skybox(faces);
 }
+
+
 
 void drawObject(FlyweightObjectComponent* comp)
 {
@@ -77,9 +92,30 @@ void drawObject(FlyweightObjectComponent* comp)
 void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glUseProgram(shaderManager->getShaderProgramme());
 
-	planetMoonTexture->bind();
+	//draw skybox
+	glDepthMask(GL_FALSE);
+	glUseProgram(shaderManager->getShaderSkybox());
+
+	glm::mat4 view = glm::mat4(1.0f);
+	glm::mat4 projection = glm::mat4(1.0f);
+	view = glm::mat4(glm::mat3(glm::lookAt(camera->cameraPos, camera->cameraPos + camera->cameraFront, camera->cameraUp)));
+
+	GLuint projMatrixLoc = glGetUniformLocation(shaderManager->getShaderSkybox(), "projection");
+	glUniformMatrix4fv(projMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix()));
+
+	GLuint viewMatrixLoc = glGetUniformLocation(shaderManager->getShaderSkybox(), "view");
+	glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+	GLuint skyboxTextureLoc = glGetUniformLocation(shaderManager->getShaderSkybox(), "skybox");
+	glUniform1i(skyboxTextureLoc, 0);
+
+	skybox->bind();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	//draw rest of the scene
+	glDepthMask(GL_TRUE);
+	glUseProgram(shaderManager->getShaderProgramme());
 
 	GLuint lightPosLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "lightPos");
 	glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
@@ -92,6 +128,8 @@ void display()
 
 	glm::vec3 scale = { 1,1,1 };
 
+	glDepthMask(GL_TRUE);
+	planetMoonTexture->bind();
 	modelMatrix = glm::mat4();
 	planetObject->move();
 	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
@@ -122,6 +160,7 @@ void display()
 
 	if (scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
 		drawObject(scratObject->baseData);
+		
 
 	//std::cout << "E scratch visible? " << scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale) << '\n';
 
@@ -189,6 +228,7 @@ void onExit()
 	delete planetObject;
 	delete scratObject;
 	delete shaderManager;
+	delete skybox;
 }
 
 int main(int argc, char** argv)
