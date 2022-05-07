@@ -1,23 +1,20 @@
-#include "ShaderManager.h"
+#include "Shader.h"
 #include <iostream>
 #include <fstream>
 
-ShaderManager::ShaderManager()
+Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
 	// get version info
 	const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
 	const GLubyte* version = glGetString(GL_VERSION); // version as a string
 	printf("Renderer: %s\n", renderer);
 	printf("OpenGL version supported %s\n", version);
-
-	shader_programme = loadShader("shaders/vertex.vert", "shaders/fragment.frag");
-	shader_skybox = loadShader("shaders/vertexSkybox.vert", "shaders/fragmentSkybox.frag");
-	//glDeleteShader(shader_programme);
+	loadShader(vertexPath, fragmentPath);
+	std::cout << "Loaded shader: vertex:" << vertexPath << "; fragment:" << fragmentPath << std::endl;
 }
 
-GLuint ShaderManager::loadShader(const char* vert, const char* frag)
+void Shader::loadShader(const char* vert, const char* frag)
 {
-	GLuint shader;
 	//read shader files
 	std::string vstext = textFileRead(vert);
 	std::string fstext = textFileRead(frag);
@@ -35,7 +32,7 @@ GLuint ShaderManager::loadShader(const char* vert, const char* frag)
 	if (!success)
 	{
 		glGetShaderInfoLog(vs, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::"<<vert<<"::COMPILATION_FAILED\n" << infoLog << std::endl;
+		std::cout << "ERROR::SHADER::" << vert << "::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
 	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -47,29 +44,27 @@ GLuint ShaderManager::loadShader(const char* vert, const char* frag)
 	if (!success)
 	{
 		glGetShaderInfoLog(fs, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::"<<frag<<"::COMPILATION_FAILED\n" << infoLog << std::endl;
+		std::cout << "ERROR::SHADER::" << frag << "::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
-	shader = glCreateProgram();
+	shader_programme = glCreateProgram();
 
-	glAttachShader(shader, fs);
-	glAttachShader(shader, vs);
-	glLinkProgram(shader);
+	glAttachShader(shader_programme, fs);
+	glAttachShader(shader_programme, vs);
+	glLinkProgram(shader_programme);
 
 	printShaderInfoLog(fs);
 	printShaderInfoLog(vs);
-	printProgramInfoLog(shader);
-	return shader;
+	printProgramInfoLog(shader_programme);
 }
 
-ShaderManager::~ShaderManager()
+Shader::~Shader()
 {
 	std::cout << "Delete Shader" << '\n';
 	glDeleteShader(shader_programme);
-	glDeleteShader(shader_skybox);
 }
 
-void ShaderManager::printShaderInfoLog(GLuint obj)
+void Shader::printShaderInfoLog(GLuint obj)
 {
 	int infologLength = 0;
 	int charsWritten = 0;
@@ -86,7 +81,7 @@ void ShaderManager::printShaderInfoLog(GLuint obj)
 	}
 }
 
-void ShaderManager::printProgramInfoLog(GLuint obj)
+void Shader::printProgramInfoLog(GLuint obj)
 {
 	int infologLength = 0;
 	int charsWritten = 0;
@@ -103,7 +98,7 @@ void ShaderManager::printProgramInfoLog(GLuint obj)
 	}
 }
 
-std::string ShaderManager::textFileRead(const char* fn)
+std::string Shader::textFileRead(const char* fn)
 {
 	std::ifstream ifile(fn);
 	std::string filetext;
@@ -115,13 +110,27 @@ std::string ShaderManager::textFileRead(const char* fn)
 	return filetext;
 }
 
-GLuint ShaderManager::getShaderProgramme()
+void Shader::use()
 {
-	return shader_programme;
+	glUseProgram(shader_programme);
 }
 
-GLuint ShaderManager::getShaderSkybox()
+void Shader::setInt(const std::string& name, int value) const
 {
-	return shader_skybox;
+	glUniform1i(glGetUniformLocation(shader_programme, name.c_str()), value);
 }
 
+void Shader::setFloat(const std::string& name, float value) const
+{
+	glUniform1f(glGetUniformLocation(shader_programme, name.c_str()), value);
+}
+
+void Shader::setMat4(const std::string& name, glm::mat4& mat) const
+{
+	glUniformMatrix4fv(glGetUniformLocation(shader_programme, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
+}
+
+void Shader::setVec3(const std::string& name, glm::vec3& vec) const
+{
+	glUniform3fv(glGetUniformLocation(shader_programme, name.c_str()), 1, glm::value_ptr(vec));
+}

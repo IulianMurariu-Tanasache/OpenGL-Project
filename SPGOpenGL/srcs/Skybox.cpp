@@ -1,15 +1,15 @@
 #include "Skybox.h"
 
-Skybox::Skybox(std::vector< char* >& paths, int flip = 0)
+Skybox::Skybox(std::vector<std::string>& faces, int flip)
 {
-	texture = new SkyboxTexture(paths, flip);
-	vaoObj = SkyboxVAO();
-	dataSize = sizeof(skyboxVertices) / sizeof(float);
+	texture = new SkyboxTexture(faces, flip);
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, dataSize, (void*)this->skyboxVertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+	vaoObj = new SkyboxVAO(vbo);
+
+	dataSize = sizeof(skyboxVertices);
 }
 
 Skybox::~Skybox()
@@ -19,4 +19,11 @@ Skybox::~Skybox()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &vbo);
+}
+
+void Skybox::bind() 
+{
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	vaoObj->bind();
+	texture->bind();
 }

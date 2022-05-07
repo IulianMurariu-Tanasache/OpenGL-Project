@@ -8,8 +8,8 @@ enum Direction {
 
 class Camera {
 	private:
-		const float moveSpeed = 40.0f;
-		const float rotationSpeed = 50.0f;
+		const float moveSpeed = 20.0f;
+		const float rotationSpeed = 30.0f;
 		//float xv = 10, yv = 12, zv = 30; //originea sistemului de observare
 
 	public:

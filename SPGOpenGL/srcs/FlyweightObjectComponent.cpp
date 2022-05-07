@@ -13,10 +13,6 @@ void FlyweightObjectComponent::loadOBJFile(const char* fileName)
 	bool res = loadOBJ(fileName, _vertices, _uvs, _normals);
 	//tratare erori?
 
-	//varianta una dupa alta
-	/*completeData = vertices.data;
-	completeData.insert(completeData.end(), normals.data.begin(), normals.data.end());*/
-
 	//varianta atribute intercalate
 
 	//calcul centru si scale
@@ -71,6 +67,8 @@ FlyweightObjectComponent::~FlyweightObjectComponent()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &vbo);
+
+	std::cout << "DELETE VBO" << '\n';
 }
 
 

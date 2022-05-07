@@ -10,13 +10,13 @@ class Planet : public Object {
 		float orbitAngleInc; // valoarea cu care se incrementeaza unghiul (de ex la apasarea unei taste)
 	public:
 		Planet(
-			FlyweightObjectComponent* component, Texture* texture,
+			std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj,
 			float _axisRotAngle, float _axisRotAngleInc,
 			float _orbitDist, float _orbitAngle, float _orbitAngleInc) :
 			axisRotAngle(_axisRotAngle),
 			axisRotAngleInc(_axisRotAngleInc), orbitDist(_orbitDist),
 			orbitAngle(_orbitAngle), orbitAngleInc(_orbitAngleInc),
-			Object(component, texture){}
+			Object(component, texture, vaoObj){}
 		void move() override;
 		glm::highp_mat4 rotateAroundAxis();
 		glm::highp_mat4 rotateAroundOrbit();

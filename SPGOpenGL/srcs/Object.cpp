@@ -1,10 +1,17 @@
 #include "Object.h"
 
-Object::Object(FlyweightObjectComponent* component, Texture* texture)
+Object::Object(std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj)
 {
-	//reset();
-	visible = true;
 	baseData = component;
 	this->texture = texture;
+	this->vaoObj = vaoObj;
 	scale = glm::vec3(1, 1, 1);
+}
+
+void Object::drawObject()
+{
+	texture.get()->bind();
+	glBindBuffer(GL_ARRAY_BUFFER, baseData.get()->vbo);
+	vaoObj->bind();
+	glDrawArrays(GL_TRIANGLES, 0, baseData.get()->vertexVec.size());
 }

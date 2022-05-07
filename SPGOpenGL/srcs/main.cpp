@@ -1,6 +1,6 @@
 ﻿#include "Planet.h"
 #include "Camera.h"
-#include "ShaderManager.h"
+#include "Shader.h"
 #include "VAOObject.h"
 #include "BoundingSphere.h"
 #include "Texture.h" 
@@ -12,67 +12,78 @@
 
 #define PI glm::pi<float>()
 #define FPS 120
+#define AU 9.0f//astronomical unit
+#define ORBIT_SPEED PI / 2048 
+#define EARTH_AXIS_ROTATION PI / 80
+#define SUN_OFFSET 6.0f
 
 /*
-	Poate fac batch rendering calumea candva, sau alte optimizari in loc de VBO pentru fiecare obiect
-	-culoare
-	-zoom, schimband nr de vertexuri?
-	-planete si telescop
-	-soare, alta sursa de lumina?
-	-shared_ptr pt flyweightcomp
+	-culoare?
+	-zoom, schimband nr de vertexuri???
+	-telescop?
+	-soare, alta sursa de lumina? - BLOOM
 	-make vbo and vao more generic
-	-shader location for uniforms make initially and store them
+	-cratere pe planete - Normal mapping?
+	-eclipse - umbre
+	-adaugat inclinatie la planete
+	-calcul modelviewprojection matrix in shader + normalMatrix tot in shadeR?
+	-repair camera frustrum
+	-texturi pe planete
 */
 
-FlyweightObjectComponent* sphereComp;
-FlyweightObjectComponent* scratComp;
-Texture* planetMoonTexture;
-Texture* earthTexture;
-Texture* marsTexture;
-Texture* sunTexture;
-VAOObject* vaoObj;
-
-Camera* camera;
 std::vector<Planet> planets;
-Object* scratObject;
-ShaderManager* shaderManager;
-Skybox* skybox;
+std::unique_ptr<Camera> camera;
+std::unique_ptr<Shader> planetShader;
+std::unique_ptr<Shader> skyboxShader;
+std::unique_ptr<Skybox> skybox;
 
 glm::mat4 modelMatrix;
 std::stack<glm::mat4> modelStack;
 
 int frame_count = 0;
 int start_time,final_time;
-int deltaTime = 0.0f;	// Time between current frame and last frame
-int lastFrameTime = 0.0f; // Time of last frame
+int deltaTime = 0;	// Time between current frame and last frame
+int lastFrameTime = 0; // Time of last frame
 
 glm::vec3 lightPos(0, 20000, 0);
-glm::vec3 viewPos(2, 3, 6);
 
-float scaleFactor = 0.1;
+#define EARTH_SCALE 0.5f
 
 void allocPlanets()
 {
 	//load obj
-	sphereComp = new FlyweightObjectComponent();
+	std::shared_ptr<FlyweightObjectComponent> sphereComp = std::make_shared<FlyweightObjectComponent>();
 	sphereComp->loadOBJFile("obj/sfera-fina.obj");
 
 	//load textures
-	planetMoonTexture = new Texture("textures/planet_moon.jpg");
-	earthTexture = new Texture("textures/earth.jpg");
-	marsTexture = new Texture("textures/mars.jpg");
-	sunTexture = new Texture("textures/sun.jpg");
+	std::shared_ptr<Texture> planetMoonTexture = std::make_shared<Texture>("textures/planet_moon.jpg");
+	std::shared_ptr<Texture> earthTexture = std::make_shared<Texture>("textures/earth.jpg");
+	std::shared_ptr<Texture> marsTexture = std::make_shared<Texture>("textures/mars.jpg");
+	std::shared_ptr<Texture> sunTexture = std::make_shared<Texture>("textures/sun.jpg");
 
-	//FlyweightObjectComponent* component, Texture* texture
+	//create VAO
+	std::shared_ptr<VAOObject> vaoObj = std::make_shared<VAOObject>();
+
+	//std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj,
 	//float _axisRotAngle, float _axisRotAngleInc, float _orbitDist, float _orbitAngle, float _orbitAngleInc
-	planets.push_back(Planet(sphereComp, sunTexture, 0, PI / 256, 0, 0, 0));
-	planets.back().scale = glm::vec3(10, 10, 10);
-	planets.push_back(Planet(sphereComp, earthTexture, 0, PI / 64, 5.0, PI / 4, PI / 64));
-	planets.push_back(Planet(sphereComp, earthTexture, 0, PI / 128, 8.0, PI / 6, PI / 32));
-	planets.push_back(Planet(sphereComp, marsTexture, 0, PI / 64, 7.0, PI / 10, PI / 64));
-	planets.push_back(Planet(sphereComp, marsTexture, 0, PI / 128, 4.0, PI / 8, PI / 128));
-	planets.push_back(Planet(sphereComp, planetMoonTexture, 0, PI / 32, 3.0, PI / 16, PI / 64));
-	planets.push_back(Planet(sphereComp, planetMoonTexture, 0, PI / 16, 3.0, PI / 8, PI / 128));
+	planets.push_back(Planet(sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0));
+	planets.back().scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
+	planets.push_back(Planet(sphereComp, planetMoonTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 40.0f, 0.4f * AU + SUN_OFFSET, 0, 47.0f * ORBIT_SPEED)); //mercury
+	planets.back().scale = glm::vec3((1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE);
+	planets.push_back(Planet(sphereComp, planetMoonTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 100.0f, 0.7f * AU + SUN_OFFSET, 0, 35.02f * ORBIT_SPEED)); //venus
+	planets.back().scale = glm::vec3(1 * EARTH_SCALE, 1 * EARTH_SCALE, 1 * EARTH_SCALE);
+	planets.push_back(Planet(sphereComp, earthTexture, vaoObj, 0, EARTH_AXIS_ROTATION, AU + SUN_OFFSET, 0, 29.78f * ORBIT_SPEED)); //earth
+	planets.back().scale = glm::vec3(1 * EARTH_SCALE, 1 * EARTH_SCALE, 1 * EARTH_SCALE);
+	planets.push_back(Planet(sphereComp, marsTexture, vaoObj, 0, EARTH_AXIS_ROTATION, 1.5f * AU + SUN_OFFSET, 0, 26.5f * ORBIT_SPEED)); //mars
+	planets.back().scale = glm::vec3((1 / 1.3f) * EARTH_SCALE, (1 / 1.3f) * EARTH_SCALE, (1 / 1.3f) * EARTH_SCALE);
+	planets.push_back(Planet(sphereComp, planetMoonTexture, vaoObj, 0, EARTH_AXIS_ROTATION * 2.4f, 4.0f * AU + SUN_OFFSET, 0, 13.06f * ORBIT_SPEED)); //jupiter
+	planets.back().scale = glm::vec3(4.2f * EARTH_SCALE, 4.2f * EARTH_SCALE, 4.2f * EARTH_SCALE);
+	planets.push_back(Planet(sphereComp, planetMoonTexture, vaoObj, 0, EARTH_AXIS_ROTATION * 2.2f, 6.5f * AU + SUN_OFFSET, 0, 10 * ORBIT_SPEED)); //saturn
+	planets.back().scale = glm::vec3(3.35f * EARTH_SCALE, 3.35f * EARTH_SCALE, 3.35f * EARTH_SCALE);
+	planets.push_back(Planet(sphereComp, planetMoonTexture, vaoObj, 0, EARTH_AXIS_ROTATION * 1.4f, 8.8f * AU + SUN_OFFSET, 0, 7.11f * ORBIT_SPEED)); //uranus
+	planets.back().scale = glm::vec3(1.6f * EARTH_SCALE, 1.6f * EARTH_SCALE, 1.6f * EARTH_SCALE);
+	planets.push_back(Planet(sphereComp, planetMoonTexture, vaoObj, 0, EARTH_AXIS_ROTATION * 1.5f, 10.1f * AU + SUN_OFFSET, 0, 5.43f * ORBIT_SPEED)); //neptune
+	planets.back().scale = glm::vec3(1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE);
 }
 
 void init()
@@ -81,30 +92,27 @@ void init()
 	glClearColor(1, 1, 1, 0);
 	glewInit();
 
-	vaoObj = new VAOObject();
-	camera = new Camera(1024,720,glm::vec3(5,5,20));
-	shaderManager = new ShaderManager();
+	camera = std::make_unique<Camera>(1024, 720, glm::vec3(47, 2, 100));
+
+	planetShader = std::make_unique<Shader>("shaders/vertex.vert","shaders/fragment.frag");
+	//planetShader->setVec3("lightPos", lightPos);
+	planetShader->setInt("currentTexture", 0);
+
+	skyboxShader = std::make_unique<Shader>("shaders/vertexSkybox.vert","shaders/fragmentSkybox.frag");
+	skyboxShader->setInt("skybox", 0);
+	//skyboxShader->setMat4("projection", camera->getProjectionMatrix());
 
 	allocPlanets();
 
 	std::vector<std::string> faces = {
-		    "textures/skybox/right.png",
+			"textures/skybox/right.png",
 			"textures/skybox/left.png",
 			"textures/skybox/top.png",
 			"textures/skybox/bottom.png",
 			"textures/skybox/front.png",
 			"textures/skybox/back.png"
 	};
-	skybox = new Skybox(faces);
-}
-
-
-
-void drawObject(FlyweightObjectComponent* comp)
-{
-	glBindBuffer(GL_ARRAY_BUFFER, comp->vbo);
-	vaoObj->bind();
-	glDrawArrays(GL_TRIANGLES, 0, comp->vertexVec.size());
+	skybox = std::make_unique<Skybox>(faces);
 }
 
 void display()
@@ -113,76 +121,44 @@ void display()
 
 	//draw skybox
 	glDepthMask(GL_FALSE);
-	glUseProgram(shaderManager->getShaderSkybox());
+	skyboxShader->use();
+	skyboxShader->setMat4("projection", camera->getProjectionMatrix());
 
 	glm::mat4 view = glm::mat4(1.0f);
 	glm::mat4 projection = glm::mat4(1.0f);
 	view = glm::mat4(glm::mat3(glm::lookAt(camera->cameraPos, camera->cameraPos + camera->cameraFront, camera->cameraUp)));
-
-	GLuint projMatrixLoc = glGetUniformLocation(shaderManager->getShaderSkybox(), "projection");
-	glUniformMatrix4fv(projMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix()));
-
-	GLuint viewMatrixLoc = glGetUniformLocation(shaderManager->getShaderSkybox(), "view");
-	glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-	GLuint skyboxTextureLoc = glGetUniformLocation(shaderManager->getShaderSkybox(), "skybox");
-	glUniform1i(skyboxTextureLoc, 0);
+	skyboxShader->setMat4("view", view);
 
 	skybox->bind();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	//draw rest of the scene
 	glDepthMask(GL_TRUE);
-	glUseProgram(shaderManager->getShaderProgramme());
 
-	GLuint lightPosLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "lightPos");
-	glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
-
-	GLuint viewPosLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "viewPos");
-	glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera->cameraPos));
-
-	GLuint textureLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "currentTexture");
-	glUniform1i(textureLoc, 0);
+	planetShader->use();
+	planetShader->setVec3("viewPos", camera->cameraPos);
+	planetShader->setVec3("lightPos", lightPos);
 
 	glm::vec3 scale = { 1,1,1 };
 
 	for (Planet& planetObject : planets) {
-		planetObject.texture->bind();
 		modelMatrix = glm::mat4();
 		planetObject.move();
 		modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 		modelMatrix *= planetObject.rotateAroundOrbit();
 		modelMatrix *= planetObject.moveOnOrbit();
 		modelMatrix *= planetObject.rotateAroundAxis();
-		scale = glm::vec3(scaleFactor, scaleFactor, scaleFactor);
-		if(planetObject.scale != glm::vec3(1,1,1))
-			scale *= planetObject.scale;
+		scale = planetObject.scale;
 		modelMatrix *= glm::scale(scale);
-		glm::mat4 normalMatrix = glm::transpose(glm::inverse(modelMatrix));
 
-		GLuint modelMatrixLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "modelViewProjectionMatrix");
-		glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix));
+		planetShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
+		planetShader->setMat4("normalMatrix", glm::transpose(glm::inverse(modelMatrix)));
 
-		GLuint normalMatrixLoc = glGetUniformLocation(shaderManager->getShaderProgramme(), "normalMatrix");
-		glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-
-		if (planetObject.baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
-			drawObject(planetObject.baseData);
+		if (planetObject.baseData.get()->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
+		{
+			planetObject.drawObject();
+		}	
 	}
-	/*modelMatrix = glm::mat4();
-	modelMatrix *= glm::rotate(PI / 16.0f, glm::vec3(0, 1, 0));
-	scale = glm::vec3(scaleFactor / 10.0f, scaleFactor / 10.0f, scaleFactor / 10.0f);
-	modelMatrix *= glm::scale(scale);
-	normalMatrix = glm::transpose(glm::inverse(modelMatrix));
-
-	glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix));
-	glUniformMatrix4fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-
-	if (scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
-		drawObject(scratObject->baseData);*/
-		
-
-	//std::cout << "E scratch visible? " << scratObject->baseData->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale) << '\n';
 
 	glutSwapBuffers();
 }
@@ -238,18 +214,6 @@ void frameFunc(int) {
 	glutTimerFunc(1000 / FPS, frameFunc, 0);
 }
 
-void onExit()
-{
-	delete sphereComp;
-	delete scratComp;
-	delete planetMoonTexture;
-	delete vaoObj;
-	delete camera;
-	delete scratObject;
-	delete shaderManager;
-	delete skybox;
-}
-
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
@@ -263,8 +227,8 @@ int main(int argc, char** argv)
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	start_time = time(NULL);
-	glutTimerFunc(1000 / FPS, frameFunc, 0);
-	atexit(onExit);
+	glutTimerFunc(1000.0f / FPS, frameFunc, 0);
+	//atexit(onExit);
 	//glutPassiveMotionFunc(My_mouse_routine);
 	glutMainLoop();
 

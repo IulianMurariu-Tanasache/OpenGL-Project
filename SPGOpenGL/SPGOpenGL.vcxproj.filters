@@ -27,9 +27,6 @@
     <ClInclude Include="include\Planet.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\ShaderManager.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Vertex.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -61,6 +58,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Skybox.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Shader.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -100,9 +100,6 @@
     <ClCompile Include="srcs\Planet.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
-    <ClCompile Include="srcs\ShaderManager.cpp">
-      <Filter>srcs</Filter>
-    </ClCompile>
     <ClCompile Include="srcs\VAOObject.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
@@ -124,10 +121,13 @@
     <ClCompile Include="srcs\SkyboxTexture.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
-    <ClCompile Include="Skybox.cpp">
+    <ClCompile Include="srcs\SkyboxVAO.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
-    <ClCompile Include="srcs\SkyboxVAO.cpp">
+    <ClCompile Include="srcs\Shader.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\Skybox.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
   </ItemGroup>

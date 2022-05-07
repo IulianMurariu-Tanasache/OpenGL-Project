@@ -9,8 +9,8 @@ class FlyweightObjectComponent {
 		//int indexInBuffer;
 		std::vector< Vertex > vertexVec;
 		std::vector< float > completeData;
-		GLuint vbo;
-		Volume* baseVolume;
+		GLuint vbo = 0;
+		Volume* baseVolume = nullptr;
 
 		//FlyweightObjectComponent();
 		~FlyweightObjectComponent();
