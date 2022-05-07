@@ -19,7 +19,12 @@ Texture::Texture(const std::string& path, int flip)
 
 	if (localBuffer)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, localBuffer);
+		if (nrChannels == 3) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, localBuffer);
+		}
+		else if (nrChannels == 4) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, localBuffer);
+		}
 		glGenerateMipmap(GL_TEXTURE_2D);
 		stbi_image_free(localBuffer);
 		std::cout << "Loaded texture from " << filePath << '\n';

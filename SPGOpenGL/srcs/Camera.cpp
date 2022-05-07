@@ -20,6 +20,7 @@ Camera::Camera(int w, int h, glm::vec3 initPos, float fov, float zNear, float zF
 	this->zFar = zFar;
 	this->aspect = (float)w / h;
 	viewMatrix = glm::lookAt(cameraPos,cameraPos + cameraFront, cameraUp);
+	rotate(UP, 45);
 	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
 }
 
@@ -56,6 +57,43 @@ void Camera::move(Direction dir, int deltaTime)
 	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
 }
 
+void Camera::rotate(Direction dir, float angle)
+{
+	switch (dir)
+	{
+	case FORWARDS:
+		rotationVec3.z -= angle;
+		break;
+	case BACKWARDS:
+		rotationVec3.z += angle;
+		break;
+	case UP:
+		rotationVec3.y += angle;
+		break;
+	case DOWN:
+		rotationVec3.y -= angle;
+		break;
+	case LEFT:
+		rotationVec3.x -= angle;
+		break;
+	case RIGHT:
+		rotationVec3.x += angle;
+		break;
+	}
+	/*if (rotationVec3.y > 89.0f)
+		rotationVec3.y = 89.0f;
+	if (rotationVec3.y < -89.0f)
+		rotationVec3.y = -89.0f;*/
+
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(rotationVec3.z)) * cos(glm::radians(rotationVec3.x));
+	direction.y = sin(glm::radians(rotationVec3.z)) * sin(glm::radians(rotationVec3.y)); 
+	direction.z = sin(glm::radians(rotationVec3.x)) * cos(glm::radians(rotationVec3.y));
+	cameraFront = glm::normalize(direction);
+
+	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
+}
+
 void Camera::rotate(Direction dir, int deltaTime)
 {
 	switch (dir)
@@ -86,7 +124,7 @@ void Camera::rotate(Direction dir, int deltaTime)
 
 	glm::vec3 direction;
 	direction.x = cos(glm::radians(rotationVec3.z)) * cos(glm::radians(rotationVec3.x));
-	direction.y = sin(glm::radians(rotationVec3.z)) * sin(glm::radians(rotationVec3.y)); 
+	direction.y = sin(glm::radians(rotationVec3.z)) * sin(glm::radians(rotationVec3.y));
 	direction.z = sin(glm::radians(rotationVec3.x)) * cos(glm::radians(rotationVec3.y));
 	cameraFront = glm::normalize(direction);
 

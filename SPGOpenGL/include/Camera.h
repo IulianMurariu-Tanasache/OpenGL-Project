@@ -28,6 +28,7 @@ class Camera {
 		~Camera();
 		void move(Direction dir, int deltaTime);
 		void rotate(Direction dir, int deltaTime);
+		void rotate(Direction dir, float angle);
 		glm::mat4 getViewMatrix();
 		glm::mat4 getProjectionMatrix();
 };
