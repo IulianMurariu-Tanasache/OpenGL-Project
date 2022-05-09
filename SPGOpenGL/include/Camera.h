@@ -11,7 +11,7 @@ class Camera {
 		const float moveSpeed = 20.0f;
 		const float rotationSpeed = 30.0f;
 		//float xv = 10, yv = 12, zv = 30; //originea sistemului de observare
-
+		void calcDirection();
 	public:
 		glm::mat4 projectionMatrix, viewMatrix;
 		glm::vec3 cameraUp;
@@ -24,7 +24,7 @@ class Camera {
 		//glm::vec3 scaleVec3;
 		//float scaleFactor = 1;
 
-		Camera(int w, int h, glm::vec3 initPos, float fov = PI / 4, float zNear = 0.1f, float zFar = 100.0f);
+		Camera(int w, int h, glm::vec3 initPos, float initPitch, float fov = PI / 4, float zNear = 0.1f, float zFar = 400.0f);
 		~Camera();
 		void move(Direction dir, int deltaTime);
 		void rotate(Direction dir, int deltaTime);

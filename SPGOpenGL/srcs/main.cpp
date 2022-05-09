@@ -18,16 +18,13 @@
 #define SUN_OFFSET 6.0f
 
 /*
-	-culoare?
 	-zoom, schimband nr de vertexuri???
-	-telescop?
 	-soare, alta sursa de lumina? - BLOOM
 	-make vbo and vao more generic
 	-cratere pe planete - Normal mapping?
 	-eclipse - umbre
 	-adaugat inclinatie la planete
 	-calcul modelviewprojection matrix in shader + normalMatrix tot in shadeR?
-	-repair camera frustrum
 	-texturi pe planete
 */
 
@@ -92,7 +89,7 @@ void init()
 	glClearColor(1, 1, 1, 0);
 	glewInit();
 
-	camera = std::make_unique<Camera>(1024, 720, glm::vec3(47, 2, 100));
+	camera = std::make_unique<Camera>(1024, 720, glm::vec3(0, 60, 70), 40.0f);
 
 	planetShader = std::make_unique<Shader>("shaders/vertex.vert","shaders/fragment.frag");
 	//planetShader->setVec3("lightPos", lightPos);
@@ -118,6 +115,7 @@ void init()
 void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDisable(GL_CULL_FACE);
 
 	//draw skybox
 	glDepthMask(GL_FALSE);
@@ -134,6 +132,8 @@ void display()
 
 	//draw rest of the scene
 	glDepthMask(GL_TRUE);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	planetShader->use();
 	planetShader->setVec3("viewPos", camera->cameraPos);
@@ -141,9 +141,11 @@ void display()
 
 	glm::vec3 scale = { 1,1,1 };
 
-	for (Planet& planetObject : planets) {
-		modelMatrix = glm::mat4();
+	modelMatrix = glm::mat4();
+	//for (Planet& planetObject : planets) {
+	Planet& planetObject = planets.at(5);
 		planetObject.move();
+		modelMatrix = glm::mat4();
 		modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 		modelMatrix *= planetObject.rotateAroundOrbit();
 		modelMatrix *= planetObject.moveOnOrbit();
@@ -157,8 +159,13 @@ void display()
 		if (planetObject.baseData.get()->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
 		{
 			planetObject.drawObject();
-		}	
-	}
+			std::cout << "Is visible " << '\n';
+		}
+		else {
+			std::cout << "NOT visible " << '\n';
+
+		}
+	//}
 
 	glutSwapBuffers();
 }
@@ -183,10 +190,10 @@ void keyboard(unsigned char key, int x, int y)
 		camera->move(RIGHT, deltaTime);
 	}
 	if( key == 'z'){
-		camera->rotate(LEFT, deltaTime);
+		camera->rotate(UP, deltaTime);
 	}
 	if( key == 'x'){
-		camera->rotate(RIGHT, deltaTime);
+		camera->rotate(DOWN, deltaTime);
 	}
 	if( key == '+'){
 		//scaleFactor += 0.01;

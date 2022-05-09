@@ -28,5 +28,5 @@ bool BoundingSphere::isOnFrustrum(const Frustrum& frustrum, glm::mat4 modelMatri
 
 bool BoundingSphere::isOnOrForwardPlan(const Plane& plane) 
 {
-	return plane.getSignedDistanceToPlan(center) > -radius;
+	return plane.getSignedDistanceToPlan(center) >= -radius;
 }
