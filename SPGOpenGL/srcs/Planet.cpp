@@ -6,6 +6,10 @@ void Planet::move()
 	orbitAngle += orbitAngleInc;
 }
 
+glm::highp_mat4 Planet::inclineAxis() {
+	return glm::rotate(axisInclineAngle, glm::vec3(0,0,1));
+}
+
 glm::highp_mat4 Planet::rotateAroundAxis() {
 	return glm::rotate(axisRotAngle, glm::vec3(0, 1, 0));
 }
