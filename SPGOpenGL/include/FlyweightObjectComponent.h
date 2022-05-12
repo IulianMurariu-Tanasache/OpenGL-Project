@@ -10,7 +10,7 @@ class FlyweightObjectComponent {
 		std::vector< Vertex > vertexVec;
 		std::vector< float > completeData;
 		GLuint vbo = 0;
-		Volume* baseVolume = nullptr;
+		BoundingSphere* baseVolume = nullptr;
 
 		//FlyweightObjectComponent();
 		~FlyweightObjectComponent();

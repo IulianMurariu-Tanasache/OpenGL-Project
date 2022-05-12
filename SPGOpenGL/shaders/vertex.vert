@@ -8,7 +8,7 @@ uniform mat4 modelViewProjectionMatrix;
 uniform mat4 normalMatrix;
 
 out vec3 normal;
-out vec3 pos;
+out vec3 fpos;
 out vec2 textCoord;
 
 void main() 
@@ -18,6 +18,6 @@ void main()
 	normal = vNormal;
 	normal = vec3(normalMatrix * vec4(normal, 1));
 
-	pos = vPos;
+	fpos = vPos;
 	textCoord = vTextCoord;
 }

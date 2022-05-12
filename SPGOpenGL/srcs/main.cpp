@@ -18,19 +18,22 @@
 #define SUN_OFFSET 6.0f
 
 /*
-	-zoom, schimband nr de vertexuri???
-	-soare, alta sursa de lumina? - BLOOM
-	-make vbo and vao more generic
-	-cratere pe planete - Normal mapping?
-	-eclipse - umbre
-	-adaugat inclinatie la planete
+	-soare - BLOOM
+	-make vbo and vao more generic ???
+	-cratere pe planete - Normal mapping
+	-eclipse - umbre ??
+	-adaugat inclinatie la planete ?
 	-calcul modelviewprojection matrix in shader + normalMatrix tot in shadeR??
+	-jumatate de soare in loc de tot soarele - optimizare ???
+	-vezi cei cu shaderele de planete ca e suspect si fa unique_ptr la sun
 */
 
 std::vector<Planet> planets;
+Planet* sun;
 std::unique_ptr<Camera> camera;
 std::unique_ptr<Shader> planetShader;
 std::unique_ptr<Shader> skyboxShader;
+std::unique_ptr<Shader> sunShader;
 std::unique_ptr<Skybox> skybox;
 
 glm::mat4 modelMatrix;
@@ -40,8 +43,6 @@ int frame_count = 0;
 int start_time,final_time;
 int deltaTime = 0;	// Time between current frame and last frame
 int lastFrameTime = 0; // Time of last frame
-
-glm::vec3 lightPos(0, 20000, 0);
 
 #define EARTH_SCALE 0.5f
 
@@ -68,8 +69,10 @@ void allocPlanets()
 
 	//std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj,
 	//float _axisInclineAngle, float _axisRotAngleInc, float _orbitDist, float _orbitAngle, float _orbitAngleInc
-	planets.push_back(Planet(sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0));
-	planets.back().scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
+	//planets.push_back(Planet(sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0));
+	//planets.back().scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
+	sun = new Planet(sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0);
+	sun->scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
 	planets.push_back(Planet(sphereComp, mercuryTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 40.0f, 0.4f * AU + SUN_OFFSET, 0, 47.0f * ORBIT_SPEED)); //mercury
 	planets.back().scale = glm::vec3((1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE);
 	planets.push_back(Planet(sphereComp, venusTexture, vaoObj, 177, -1.0f * (EARTH_AXIS_ROTATION / 100.0f), 0.7f * AU + SUN_OFFSET, 0, 35.02f * ORBIT_SPEED)); //venus
@@ -102,6 +105,8 @@ void init()
 
 	skyboxShader = std::make_unique<Shader>("shaders/vertexSkybox.vert","shaders/fragmentSkybox.frag");
 	skyboxShader->setInt("skybox", 0);
+
+	sunShader = std::make_unique<Shader>("shaders/vertex.vert", "shaders/sunFragment.frag");
 	//skyboxShader->setMat4("projection", camera->getProjectionMatrix());
 
 	allocPlanets();
@@ -139,16 +144,37 @@ void display()
 	glDepthMask(GL_TRUE);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+	glm::vec3 scale = { 1,1,1 };
+	modelMatrix = glm::mat4();
 
+	//draw sun
+	sunShader->use();
+	sunShader->setInt("currentTexture", 0);
+
+	sun->move();
+	modelMatrix = glm::mat4();
+	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
+	modelMatrix *= sun->rotateAroundOrbit();
+	modelMatrix *= sun->moveOnOrbit();
+	modelMatrix *= sun->inclineAxis();
+	modelMatrix *= sun->rotateAroundAxis();
+	scale = sun->scale;
+	modelMatrix *= glm::scale(scale);
+
+	sunShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
+
+	if (sun->baseData.get()->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
+	{
+		sun->drawObject();
+	}
+
+	//draw planets
 	planetShader->use();
 	planetShader->setVec3("viewPos", camera->cameraPos);
-	planetShader->setVec3("lightPos", lightPos);
+	planetShader->setVec3("sunPos", glm::vec3(0,0,0));
+	planetShader->setFloat("sunRadius", 5);
 
-	glm::vec3 scale = { 1,1,1 };
-
-	modelMatrix = glm::mat4();
 	for (Planet& planetObject : planets) {
-	//Planet& planetObject = planets.at(5);
 		planetObject.move();
 		modelMatrix = glm::mat4();
 		modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
@@ -160,17 +186,13 @@ void display()
 		modelMatrix *= glm::scale(scale);
 
 		planetShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
+		planetShader->setMat4("modelM", modelMatrix);
 		planetShader->setMat4("normalMatrix", glm::transpose(glm::inverse(modelMatrix)));
 
 		if (planetObject.baseData.get()->baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
 		{
 			planetObject.drawObject();
-			//std::cout << "Is visible " << '\n';
 		}
-		/*else {
-			std::cout << "NOT visible " << '\n';
-
-		}*/
 	}
 
 	glutSwapBuffers();
