@@ -5,6 +5,8 @@
 #include "BoundingSphere.h"
 #include "Texture.h" 
 #include "Skybox.h"
+#include "QuadObject.h"
+#include "FrameBuffer.h"
 #include <stack>
 #include <time.h>
 #include <iostream>
@@ -28,13 +30,22 @@
 	-vezi cei cu shaderele de planete ca e suspect si fa unique_ptr la sun
 */
 
+unsigned int hdrFBO;
+unsigned int colorBuffers[2];
+
+
 std::vector<Planet> planets;
 Planet* sun;
 std::unique_ptr<Camera> camera;
 std::unique_ptr<Shader> planetShader;
 std::unique_ptr<Shader> skyboxShader;
 std::unique_ptr<Shader> sunShader;
+std::unique_ptr<Shader> blurShader;
+std::unique_ptr<Shader> screenShader;
 std::unique_ptr<Skybox> skybox;
+
+std::unique_ptr<QuadObject> quad;
+std::unique_ptr<FrameBuffer> pingpong[2];
 
 glm::mat4 modelMatrix;
 std::stack<glm::mat4> modelStack;
@@ -91,10 +102,43 @@ void allocPlanets()
 	planets.back().scale = glm::vec3(1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE);
 }
 
+//asta face 2 framebuffere, unul normal si unul pe care facem post-procesare---> asta e pt bloom la soare
+void setUpFrameBuffers()
+{
+	// set up floating point framebuffer to render scene to
+	glGenFramebuffers(1, &hdrFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+	glGenTextures(2, colorBuffers);
+	for (unsigned int i = 0; i < 2; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_RGBA16F, 1024, 720, 0, GL_RGBA, GL_FLOAT, NULL
+		);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		// attach texture to framebuffer
+		glFramebufferTexture2D(
+			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0
+		);
+	}
+	unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, attachments);
+
+	// create and attach depth buffer (renderbuffer)
+	unsigned int rboDepth;
+	glGenRenderbuffers(1, &rboDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 720);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+}
+
 void init()
 {
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(1, 1, 1, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glewInit();
 
 	camera = std::make_unique<Camera>(1024, 720, glm::vec3(0, 60, 70), 40.0f);
@@ -107,6 +151,8 @@ void init()
 	skyboxShader->setInt("skybox", 0);
 
 	sunShader = std::make_unique<Shader>("shaders/vertex.vert", "shaders/sunFragment.frag");
+	blurShader = std::make_unique<Shader>("shaders/screenVertex.vert", "shaders/gaussianBlur.frag");
+	screenShader = std::make_unique<Shader>("shaders/screenVertex.vert", "shaders/screenFrag.frag");
 	//skyboxShader->setMat4("projection", camera->getProjectionMatrix());
 
 	allocPlanets();
@@ -120,10 +166,20 @@ void init()
 			"textures/skybox/back.png"
 	};
 	skybox = std::make_unique<Skybox>(faces);
+
+	quad = std::make_unique<QuadObject>();
+
+	pingpong[0] = std::make_unique<FrameBuffer>();
+	pingpong[1] = std::make_unique<FrameBuffer>();
+
+	setUpFrameBuffers();
 }
 
 void display()
 {
+
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
 
@@ -167,7 +223,24 @@ void display()
 	{
 		sun->drawObject();
 	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	//blur
+	bool horizontal = true, first_iteration = true;
+	unsigned int amount = 10;
+	blurShader->use();
+	for (unsigned int i = 0; i < amount; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, pingpong[horizontal]->fbo);
+		blurShader->setInt("horizontal", horizontal);
+		glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpong[!horizontal]->colorBuffer);  // bind texture of other framebuffer (or scene if first iteration)
+		quad->draw();
+		horizontal = !horizontal;
+		if (first_iteration)
+			first_iteration = false;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	//draw planets
 	planetShader->use();
 	planetShader->setVec3("viewPos", camera->cameraPos);
@@ -194,6 +267,21 @@ void display()
 			planetObject.drawObject();
 		}
 	}
+
+	//draw frameBuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	screenShader->use();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, pingpong[!horizontal]->colorBuffer);
+	screenShader->setInt("scene", 0);
+	screenShader->setInt("bloomBlur", 1);
+	screenShader->setFloat("exposure", 1.0f);
+
+	quad->draw();
 
 	glutSwapBuffers();
 }

@@ -63,6 +63,12 @@
     <ClInclude Include="include\Shader.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\QuadObject.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FrameBuffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment.frag">
@@ -78,6 +84,15 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\sunFragment.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\gaussianBlur.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\screenVertex.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\screenFrag.frag">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
@@ -128,6 +143,12 @@
       <Filter>srcs</Filter>
     </ClCompile>
     <ClCompile Include="srcs\Skybox.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\FrameBuffer.cpp">
+      <Filter>srcs</Filter>
+    </ClCompile>
+    <ClCompile Include="srcs\QuadObject.cpp">
       <Filter>srcs</Filter>
     </ClCompile>
   </ItemGroup>

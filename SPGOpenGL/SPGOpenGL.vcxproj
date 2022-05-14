@@ -23,11 +23,13 @@
     <ClInclude Include="include\BoundingVolume.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\FlyweightObjectComponent.h" />
+    <ClInclude Include="include\FrameBuffer.h" />
     <ClInclude Include="include\Frustrum.h" />
     <ClInclude Include="include\Plane.h" />
     <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\objloader.hpp" />
     <ClInclude Include="include\Planet.h" />
+    <ClInclude Include="include\QuadObject.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Skybox.h" />
     <ClInclude Include="include\SkyboxTexture.h" />
@@ -40,6 +42,9 @@
   <ItemGroup>
     <None Include="shaders\fragment.frag" />
     <None Include="shaders\fragmentSkybox.frag" />
+    <None Include="shaders\gaussianBlur.frag" />
+    <None Include="shaders\screenFrag.frag" />
+    <None Include="shaders\screenVertex.vert" />
     <None Include="shaders\sunFragment.frag" />
     <None Include="shaders\vertex.vert" />
     <None Include="shaders\vertexSkybox.vert" />
@@ -48,12 +53,14 @@
     <ClCompile Include="srcs\BoundingSphere.cpp" />
     <ClCompile Include="srcs\Camera.cpp" />
     <ClCompile Include="srcs\FlyweightObjectComponent.cpp" />
+    <ClCompile Include="srcs\FrameBuffer.cpp" />
     <ClCompile Include="srcs\Frustrum.cpp" />
     <ClCompile Include="srcs\main.cpp" />
     <ClCompile Include="srcs\Object.cpp" />
     <ClCompile Include="srcs\objloader.cpp" />
     <ClCompile Include="srcs\Plane.cpp" />
     <ClCompile Include="srcs\Planet.cpp" />
+    <ClCompile Include="srcs\QuadObject.cpp" />
     <ClCompile Include="srcs\Shader.cpp" />
     <ClCompile Include="srcs\Skybox.cpp" />
     <ClCompile Include="srcs\SkyboxTexture.cpp" />

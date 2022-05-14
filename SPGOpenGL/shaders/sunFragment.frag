@@ -1,5 +1,6 @@
 #version 400
-out vec4 fragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 
 /*in vec3 normal;
 in vec3 fpos;*/
@@ -12,5 +13,6 @@ void main()
 	vec4 textureColor = texture(currentTexture, textCoord);
 		
 	//vec3 color  = vec3(0.6, 0.3, 0);
-	fragColor = textureColor;
+	FragColor = textureColor;
+	BrightColor = textureColor;
 }
