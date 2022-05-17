@@ -12,6 +12,9 @@
 #include <iostream>
 #include "stb_image.h"
 
+#define W_WIDTH 1024
+#define W_HEIGHT 720
+
 #define PI glm::pi<float>()
 #define FPS 60
 
@@ -116,7 +119,7 @@ void setUpFrameBuffers()
 	{
 		glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
 		glTexImage2D(
-			GL_TEXTURE_2D, 0, GL_RGBA16F, 1024, 720, 0, GL_RGBA, GL_FLOAT, NULL
+			GL_TEXTURE_2D, 0, GL_RGBA16F, W_WIDTH, W_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL
 		);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -134,7 +137,7 @@ void setUpFrameBuffers()
 	unsigned int rboDepth;
 	glGenRenderbuffers(1, &rboDepth);
 	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 720);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, W_WIDTH, W_HEIGHT);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
 }
 
@@ -142,7 +145,7 @@ void init()
 {
 	glewInit();
 
-	camera = std::make_unique<Camera>(1024, 720, glm::vec3(0, 60, 70), 40.0f);
+	camera = std::make_unique<Camera>(W_WIDTH, W_HEIGHT, glm::vec3(0, 60, 70), 40.0f);
 
 	planetShader = std::make_unique<Shader>("shaders/planetShader.vert","shaders/planetShader.frag");
 	planetShader->use();
@@ -295,36 +298,6 @@ void reshape(int w, int h)
 	glViewport(0, 0, w, h);
 }
 
-void keyboard(unsigned char key, int x, int y)
-{
-	if( key == 'w'){
-		camera->move(DOWN, deltaTime);
-	}
-	if( key == 's'){
-		camera->move(UP, deltaTime);
-	}
-	if( key == 'a'){
-		camera->move(LEFT, deltaTime);
-	}
-	if( key == 'd'){
-		camera->move(RIGHT, deltaTime);
-	}
-	if( key == 'z'){
-		camera->rotate(UP, deltaTime);
-	}
-	if( key == 'x'){
-		camera->rotate(DOWN, deltaTime);
-	}
-	if( key == '+'){
-		//scaleFactor += 0.01;
-		camera->move(FORWARDS, deltaTime);
-	}
-	if( key == '-'){
-		//scaleFactor -= 0.01;
-		camera->move(BACKWARDS, deltaTime);
-	}
-}
-
 void frameFunc(int) {
 	frame_count++;
 	int currentFrame = glutGet(GLUT_ELAPSED_TIME); 
@@ -341,12 +314,70 @@ void frameFunc(int) {
 	glutTimerFunc(1000 / FPS, frameFunc, 0);
 }
 
+void keyboard(unsigned char key, int x, int y)
+{
+	if(key == 'q' ){
+		camera->move(UP, deltaTime);
+	}
+	if(key == 'e'){
+		camera->move(DOWN, deltaTime);
+	}
+	if( key == 'a' ){
+		camera->move(LEFT, deltaTime);
+	}
+	if( key == 'd' ){
+		camera->move(RIGHT, deltaTime);
+	}
+	if( key == 'w' ){
+		camera->move(FORWARDS, deltaTime);
+	}
+	if( key == 's' ){
+		camera->move(BACKWARDS, deltaTime);
+	}
+}
+
+bool firstMouse = true;
+void mouseCallback(int x, int y)
+{
+	static int lastX, lastY;
+	if (firstMouse)
+	{
+		glutWarpPointer(W_WIDTH / 2.0f, W_HEIGHT / 2.0f);
+		lastX = x = W_WIDTH / 2.0f;
+		lastY = y = W_HEIGHT / 2.0f;
+		
+		firstMouse = false;
+	}
+
+	float xoffset = x - lastX;
+	float yoffset = lastY - y;
+	lastX = x;
+	lastY = y;
+
+	if (xoffset < 0)
+	{
+		camera->rotate(LEFT, (int)abs(xoffset));
+	}
+	else
+	{
+		camera->rotate(RIGHT, (int)abs(xoffset));
+	}
+	if (yoffset < 0)
+	{
+		camera->rotate(DOWN, (int)abs(yoffset));
+	}
+	else
+	{
+		camera->rotate(UP, (int)abs(yoffset));
+	}
+}
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowPosition(100, 200);
-	glutInitWindowSize(1024, 720);
+	glutInitWindowSize(W_WIDTH, W_HEIGHT);
 	glutCreateWindow("Cel mai engine grafic");
 	init();
 
@@ -355,8 +386,8 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(keyboard);
 	start_time = time(NULL);
 	glutTimerFunc(1000.0f / FPS, frameFunc, 0);
-	//atexit(onExit);
-	//glutPassiveMotionFunc(My_mouse_routine);
+	glutPassiveMotionFunc(mouseCallback);
+	glutMotionFunc(mouseCallback);
 	glutMainLoop();
 
 	return 0;
