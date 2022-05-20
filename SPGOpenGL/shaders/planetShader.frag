@@ -1,5 +1,7 @@
 #version 400
-out vec4 fragColor;
+layout (location = 0) out vec4 fragColor;
+layout (location = 1) out vec4 bloom;
+layout (location = 2) out uvec4 index;
 
 in vec3 normal;
 in vec3 fpos;
@@ -77,4 +79,6 @@ void main()
 	vec3 color = lighting(fpos, normal, viewPos, ambient, lightColor, specular, specPower);
 		
 	fragColor = textureColor * vec4(color, 1.0);
+	bloom = vec4(0.0f,0.0f,0.0f,1.0f);
+	index = uvec4(0, gl_FragCoord.xy , 1);;
 }

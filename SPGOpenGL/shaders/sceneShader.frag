@@ -13,7 +13,7 @@ void main()
     vec3 sceneColor = texture(scene, textCoord).rgb;      
     if(bloomColor == vec3(0.0f,0.0f,0.0f))
     {
-         FragColor = vec4(0,0,0, 1.0);
+         FragColor = texture(scene, textCoord);
     }
     else{
         sceneColor += bloomColor; // additive blending

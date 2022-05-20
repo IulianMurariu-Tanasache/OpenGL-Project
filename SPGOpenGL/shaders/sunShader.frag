@@ -1,6 +1,7 @@
 #version 400
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
+layout (location = 2) out uvec4 index;
 
 in vec2 textCoord;
 
@@ -12,4 +13,5 @@ void main()
 		
 	FragColor = textureColor;
 	BrightColor = textureColor;
+	index = uvec4(0, gl_FragCoord.xy , 1);
 }
