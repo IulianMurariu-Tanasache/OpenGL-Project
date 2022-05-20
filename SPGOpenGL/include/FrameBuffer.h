@@ -8,4 +8,6 @@ class FrameBuffer {
 
 		FrameBuffer();
 		~FrameBuffer();
+
+		virtual void init(unsigned int w_width, unsigned int w_height);
 };

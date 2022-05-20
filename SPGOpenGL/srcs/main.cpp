@@ -6,7 +6,7 @@
 #include "Texture.h" 
 #include "Skybox.h"
 #include "QuadObject.h"
-#include "FrameBuffer.h"
+#include "PickingBuffer.h"
 #include <stack>
 #include <time.h>
 #include <iostream>
@@ -35,6 +35,9 @@
 	-vezi cei cu shaderele de planete ca e suspect si fa unique_ptr la sun
 */
 
+int mouseClickX, mouseClickY;
+bool clicked = false;
+
 unsigned int hdrFBO;
 unsigned int colorBuffers[2];
 
@@ -48,17 +51,20 @@ std::unique_ptr<Shader> skyboxShader;
 std::unique_ptr<Shader> sunShader;
 std::unique_ptr<Shader> blurShader;
 std::unique_ptr<Shader> sceneShader;
+std::unique_ptr<Shader> pickingShader;
+
 std::unique_ptr<Skybox> skybox;
 
 std::unique_ptr<QuadObject> quad;
 
 std::unique_ptr<FrameBuffer> pingpong[2];
+std::unique_ptr<PickingBuffer> pickingBuffer;
 
 glm::mat4 modelMatrix;
 std::stack<glm::mat4> modelStack;
 
 int frame_count = 0;
-int start_time,final_time;
+int start_time, final_time;
 int deltaTime = 0;	// Time between current frame and last frame
 int lastFrameTime = 0; // Time of last frame
 
@@ -121,8 +127,8 @@ void setUpFrameBuffers()
 		glTexImage2D(
 			GL_TEXTURE_2D, 0, GL_RGBA16F, W_WIDTH, W_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL
 		);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		// attach texture to framebuffer
@@ -147,14 +153,15 @@ void init()
 
 	camera = std::make_unique<Camera>(W_WIDTH, W_HEIGHT, glm::vec3(0, 60, 70), 40.0f);
 
-	planetShader = std::make_unique<Shader>("shaders/planetShader.vert","shaders/planetShader.frag");
+	planetShader = std::make_unique<Shader>("shaders/planetShader.vert", "shaders/planetShader.frag");
 	planetShader->use();
 	planetShader->setVec3("sunPos", glm::vec3(0, 0, 0));
 	planetShader->setFloat("sunRadius", 5);
 	//planetShader->setVec3("lightPos", lightPos);
 	planetShader->setInt("currentTexture", 0);
 
-	skyboxShader = std::make_unique<Shader>("shaders/skyboxShader.vert","shaders/skyboxShader.frag");
+	skyboxShader = std::make_unique<Shader>("shaders/skyboxShader.vert", "shaders/skyboxShader.frag");
+	skyboxShader->use();
 	skyboxShader->setInt("skybox", 0);
 
 	sunShader = std::make_unique<Shader>("shaders/sunShader.vert", "shaders/sunShader.frag");
@@ -168,6 +175,7 @@ void init()
 	sceneShader->setInt("scene", 0);
 	sceneShader->setInt("bloomBlur", 1);
 	sceneShader->setFloat("exposure", 1.0f);
+	pickingShader = std::make_unique<Shader>("shaders/pickingShader.vert", "shaders/pickingShader.frag");
 
 	allocPlanets();
 
@@ -184,15 +192,50 @@ void init()
 	quad = std::make_unique<QuadObject>();
 
 	pingpong[0] = std::make_unique<FrameBuffer>();
+	pingpong[0]->init(W_WIDTH, W_HEIGHT);
 	pingpong[1] = std::make_unique<FrameBuffer>();
+	pingpong[1]->init(W_WIDTH, W_HEIGHT);
 
+	pickingBuffer = std::make_unique<PickingBuffer>();
+	pickingBuffer->init(W_WIDTH, W_HEIGHT);
 	setUpFrameBuffers();
 
 	glEnable(GL_DEPTH_TEST);
 }
+void pick()
+{
+	pickingBuffer->enableWriting();
+
+	int clearValue = 0;
+	glClearTexImage(pickingBuffer->colorBuffer, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &clearValue);
+	glClearColor(0, 0, 0, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glm::vec3 scale = { 1,1,1 };
+	modelMatrix = glm::mat4();
+
+	//draw sun
+	pickingShader->use();
+	pickingShader->setInt("objectIndex", 1);
+	sun->move();
+	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
+	modelMatrix *= sun->rotateAroundOrbit();
+	modelMatrix *= sun->moveOnOrbit();
+	modelMatrix *= sun->inclineAxis();
+	modelMatrix *= sun->rotateAroundAxis();
+	scale = sun->scale;
+	modelMatrix *= glm::scale(scale);
+	pickingShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
+	sun->drawObject();
+
+	glBindFramebuffer(GL_FRAMEBUFFER,0);
+}
 
 void display()
 {
+
+	pick();
+
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -202,7 +245,6 @@ void display()
 	glDepthMask(GL_FALSE);
 	skyboxShader->use();
 	skyboxShader->setMat4("projection", camera->getProjectionMatrix());
-
 	glm::mat4 view = glm::mat4(1.0f);
 	view = glm::mat4(glm::mat3(glm::lookAt(camera->cameraPos, camera->cameraPos + camera->cameraFront, camera->cameraUp)));
 	skyboxShader->setMat4("view", view);
@@ -234,22 +276,6 @@ void display()
 	{
 		sun->drawObject();
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	//blur
-	bool horizontal = true, first_iteration = true;
-	unsigned int amount = 10;
-	blurShader->use();
-	for (unsigned int i = 0; i < amount; i++)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, pingpong[horizontal]->fbo);
-		blurShader->setInt("horizontal", horizontal);
-		glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpong[!horizontal]->colorBuffer);  // bind texture of other framebuffer (or scene if first iteration)
-		quad->draw();
-		horizontal = !horizontal;
-		if (first_iteration)
-			first_iteration = false;
-	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 
@@ -278,6 +304,32 @@ void display()
 		}
 	}
 
+	//bloom->nu face nimic pe nvidia cred...
+	bool horizontal = true, first_iteration = true;
+	unsigned int amount = 10;
+	blurShader->use();
+	for (unsigned int i = 0; i < amount; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, pingpong[horizontal]->fbo);
+		blurShader->setInt("horizontal", horizontal);
+		glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpong[!horizontal]->colorBuffer);  // bind texture of other framebuffer (or scene if first iteration)
+		quad->draw();
+		horizontal = !horizontal;
+		if (first_iteration)
+			first_iteration = false;
+	}
+
+	if (clicked)
+	{
+		PickingBuffer::PixelInfo pixel = pickingBuffer->readPixel(mouseClickX, W_HEIGHT - mouseClickY);
+		std::cout << "Clicked!->" << pixel.ObjectID<<'\n';
+
+		if (pixel.ObjectID != 0)
+		{
+			pixel.print();
+		}
+	}
+
 	//draw frameBuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -290,6 +342,8 @@ void display()
 
 	quad->draw();
 
+	clicked = false;
+
 	glutSwapBuffers();
 }
 
@@ -300,13 +354,13 @@ void reshape(int w, int h)
 
 void frameFunc(int) {
 	frame_count++;
-	int currentFrame = glutGet(GLUT_ELAPSED_TIME); 
+	int currentFrame = glutGet(GLUT_ELAPSED_TIME);
 	deltaTime = currentFrame - lastFrameTime;
 	lastFrameTime = currentFrame;
 
 	final_time = time(NULL);
 	if (final_time - start_time > 0) {
-		std::cout << "FPS: " << frame_count << std::endl;
+		//std::cout << "FPS: " << frame_count << std::endl;
 		frame_count = 0;
 		start_time = final_time;
 	}
@@ -316,22 +370,22 @@ void frameFunc(int) {
 
 void keyboard(unsigned char key, int x, int y)
 {
-	if(key == 'q' ){
+	if (key == 'q') {
 		camera->move(UP, deltaTime);
 	}
-	if(key == 'e'){
+	if (key == 'e') {
 		camera->move(DOWN, deltaTime);
 	}
-	if( key == 'a' ){
+	if (key == 'a') {
 		camera->move(LEFT, deltaTime);
 	}
-	if( key == 'd' ){
+	if (key == 'd') {
 		camera->move(RIGHT, deltaTime);
 	}
-	if( key == 'w' ){
+	if (key == 'w') {
 		camera->move(FORWARDS, deltaTime);
 	}
-	if( key == 's' ){
+	if (key == 's') {
 		camera->move(BACKWARDS, deltaTime);
 	}
 }
@@ -345,7 +399,7 @@ void mouseCallback(int x, int y)
 		glutWarpPointer(W_WIDTH / 2.0f, W_HEIGHT / 2.0f);
 		lastX = x = W_WIDTH / 2.0f;
 		lastY = y = W_HEIGHT / 2.0f;
-		
+
 		firstMouse = false;
 	}
 
@@ -354,7 +408,7 @@ void mouseCallback(int x, int y)
 	lastX = x;
 	lastY = y;
 
-	if (xoffset < 0)
+	/*if (xoffset < 0)
 	{
 		camera->rotate(LEFT, (int)abs(xoffset));
 	}
@@ -369,6 +423,16 @@ void mouseCallback(int x, int y)
 	else
 	{
 		camera->rotate(UP, (int)abs(yoffset));
+	}*/
+}
+
+void mouseClick(int button, int state, int x, int y)
+{
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		mouseClickX = x;
+		mouseClickY = y;
+		clicked = true;
 	}
 }
 
@@ -388,6 +452,7 @@ int main(int argc, char** argv)
 	glutTimerFunc(1000.0f / FPS, frameFunc, 0);
 	glutPassiveMotionFunc(mouseCallback);
 	glutMotionFunc(mouseCallback);
+	glutMouseFunc(mouseClick);
 	glutMainLoop();
 
 	return 0;
