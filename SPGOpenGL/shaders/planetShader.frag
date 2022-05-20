@@ -12,6 +12,7 @@ uniform vec3 sunPos;
 uniform float sunRadius;
 uniform mat4 modelM;
 uniform sampler2D currentTexture;
+uniform int id;
 
 #define PI 3.141592
 #define SAMPLES 50
@@ -80,5 +81,5 @@ void main()
 		
 	fragColor = textureColor * vec4(color, 1.0);
 	bloom = vec4(0.0f,0.0f,0.0f,1.0f);
-	index = uvec4(0, gl_FragCoord.xy , 1);;
+	index = uvec4(0, gl_FragCoord.xy , id);
 }

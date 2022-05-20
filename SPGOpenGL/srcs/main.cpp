@@ -35,7 +35,7 @@
 	-jumatate de soare in loc de tot soarele - optimizare ???n
 */
 
-int mouseClickX, mouseClickY;
+int mouseClickX=0, mouseClickY=0;
 bool clicked = false;
 bool paused = false;
 
@@ -60,6 +60,8 @@ std::unique_ptr<FrameBuffer> pingpong[2];
 
 glm::mat4 modelMatrix;
 std::stack<glm::mat4> modelStack;
+
+std::string curr_text = "";
 
 int frame_count = 0;
 int start_time, final_time;
@@ -87,28 +89,28 @@ void allocPlanets()
 	//create VAO
 	std::shared_ptr<VAOObject> vaoObj = std::make_shared<VAOObject>();
 
-	//std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj,
+	//id, std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj,
 	//float _axisInclineAngle, float _axisRotAngleInc, float _orbitDist, float _orbitAngle, float _orbitAngleInc
 	//planets.push_back(Planet(sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0));
 	//planets.back().scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
-	sun = std::make_unique<Planet>(sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0);
+	sun = std::make_unique<Planet>(1, sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0);
 	sun->scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
 
-	planets.push_back(Planet(sphereComp, mercuryTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 40.0f, 0.4f * AU + SUN_OFFSET, 0, 47.0f * ORBIT_SPEED)); //mercury
+	planets.push_back(Planet(2, sphereComp, mercuryTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 40.0f, 0.4f * AU + SUN_OFFSET, 0, 47.0f * ORBIT_SPEED)); //mercury
 	planets.back().scale = glm::vec3((1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE);
-	planets.push_back(Planet(sphereComp, venusTexture, vaoObj, 177, -1.0f * (EARTH_AXIS_ROTATION / 100.0f), 0.7f * AU + SUN_OFFSET, 0, 35.02f * ORBIT_SPEED)); //venus
+	planets.push_back(Planet(3, sphereComp, venusTexture, vaoObj, 177, -1.0f * (EARTH_AXIS_ROTATION / 100.0f), 0.7f * AU + SUN_OFFSET, 0, 35.02f * ORBIT_SPEED)); //venus
 	planets.back().scale = glm::vec3(1 * EARTH_SCALE, 1 * EARTH_SCALE, 1 * EARTH_SCALE);
-	planets.push_back(Planet(sphereComp, earthTexture, vaoObj, 23, EARTH_AXIS_ROTATION, AU + SUN_OFFSET, 0, 29.78f * ORBIT_SPEED)); //earth
+	planets.push_back(Planet(4, sphereComp, earthTexture, vaoObj, 23, EARTH_AXIS_ROTATION, AU + SUN_OFFSET, 0, 29.78f * ORBIT_SPEED)); //earth
 	planets.back().scale = glm::vec3(1 * EARTH_SCALE, 1 * EARTH_SCALE, 1 * EARTH_SCALE);
-	planets.push_back(Planet(sphereComp, marsTexture, vaoObj, 25, EARTH_AXIS_ROTATION, 1.5f * AU + SUN_OFFSET, 0, 26.5f * ORBIT_SPEED)); //mars
+	planets.push_back(Planet(5 ,sphereComp, marsTexture, vaoObj, 25, EARTH_AXIS_ROTATION, 1.5f * AU + SUN_OFFSET, 0, 26.5f * ORBIT_SPEED)); //mars
 	planets.back().scale = glm::vec3((1 / 1.3f) * EARTH_SCALE, (1 / 1.3f) * EARTH_SCALE, (1 / 1.3f) * EARTH_SCALE);
-	planets.push_back(Planet(sphereComp, jupiterTexture, vaoObj, 3, EARTH_AXIS_ROTATION * 2.4f, 5.0f * AU + SUN_OFFSET, 0, 13.06f * ORBIT_SPEED)); //jupiter
+	planets.push_back(Planet(6, sphereComp, jupiterTexture, vaoObj, 3, EARTH_AXIS_ROTATION * 2.4f, 5.0f * AU + SUN_OFFSET, 0, 13.06f * ORBIT_SPEED)); //jupiter
 	planets.back().scale = glm::vec3(4.2f * EARTH_SCALE, 4.2f * EARTH_SCALE, 4.2f * EARTH_SCALE);
-	planets.push_back(Planet(sphereComp, saturnTexture, vaoObj, 27, EARTH_AXIS_ROTATION * 2.2f, 7.5f * AU + SUN_OFFSET, 0, 10 * ORBIT_SPEED)); //saturn
+	planets.push_back(Planet(7, sphereComp, saturnTexture, vaoObj, 27, EARTH_AXIS_ROTATION * 2.2f, 7.5f * AU + SUN_OFFSET, 0, 10 * ORBIT_SPEED)); //saturn
 	planets.back().scale = glm::vec3(3.35f * EARTH_SCALE, 3.35f * EARTH_SCALE, 3.35f * EARTH_SCALE);
-	planets.push_back(Planet(sphereComp, uranusTexture, vaoObj, 98, EARTH_AXIS_ROTATION * 1.4f, 9.8f * AU + SUN_OFFSET, 0, 7.11f * ORBIT_SPEED)); //uranus
+	planets.push_back(Planet(8, sphereComp, uranusTexture, vaoObj, 98, EARTH_AXIS_ROTATION * 1.4f, 9.8f * AU + SUN_OFFSET, 0, 7.11f * ORBIT_SPEED)); //uranus
 	planets.back().scale = glm::vec3(1.6f * EARTH_SCALE, 1.6f * EARTH_SCALE, 1.6f * EARTH_SCALE);
-	planets.push_back(Planet(sphereComp, neptuneTexture, vaoObj, 28, EARTH_AXIS_ROTATION * 1.5f, 11.1f * AU + SUN_OFFSET, 0, 5.43f * ORBIT_SPEED)); //neptune
+	planets.push_back(Planet(9, sphereComp, neptuneTexture, vaoObj, 28, EARTH_AXIS_ROTATION * 1.5f, 11.1f * AU + SUN_OFFSET, 0, 5.43f * ORBIT_SPEED)); //neptune
 	planets.back().scale = glm::vec3(1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE);
 }
 
@@ -131,6 +133,7 @@ void init()
 	sunShader = std::make_unique<Shader>("shaders/sunShader.vert", "shaders/sunShader.frag");
 	sunShader->use();
 	sunShader->setInt("currentTexture", 0);
+	//sunShader->setInt("id", 1);
 
 	blurShader = std::make_unique<Shader>("shaders/gaussianBlur.vert", "shaders/gaussianBlur.frag");
 
@@ -138,7 +141,7 @@ void init()
 	sceneShader->use();
 	sceneShader->setInt("scene", 0);
 	sceneShader->setInt("bloomBlur", 1);
-	sceneShader->setFloat("exposure", 1.0f);
+	sceneShader->setFloat("exposure", 1.5f);
 
 	allocPlanets();
 
@@ -166,15 +169,12 @@ void init()
 	std::cout << "Avem erori? " << glGetError() << '\n';
 }
 
-
 void display()
 {
-	if (paused)
-		return;
-	//mainFrameBuffer->enable();
+	mainFrameBuffer->enable();
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	/*
+	
 	//draw skybox
 	glDisable(GL_CULL_FACE);
 	glDepthMask(GL_FALSE);
@@ -198,7 +198,9 @@ void display()
 	//draw sun
 	sunShader->use();
 
-	sun->move();
+	if (!paused) {
+		sun->move();
+	}
 	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 	modelMatrix *= sun->rotateAroundOrbit();
 	modelMatrix *= sun->moveOnOrbit();
@@ -221,7 +223,9 @@ void display()
 	planetShader->setVec3("viewPos", camera->cameraPos);
 
 	for (Planet& planetObject : planets) {
-		planetObject.move();
+		if (!paused) {
+			planetObject.move();
+		}
 		modelMatrix = glm::mat4();
 		modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 		modelMatrix *= planetObject.rotateAroundOrbit();
@@ -234,6 +238,7 @@ void display()
 		planetShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
 		planetShader->setMat4("modelM", modelMatrix);
 		planetShader->setMat4("normalMatrix", glm::transpose(glm::inverse(modelMatrix)));
+		planetShader->setInt("id", planetObject.id);
 
 		if (planetObject.getBaseData().baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
 		{
@@ -269,13 +274,18 @@ void display()
 
 		if (pixel[3] > 0 && pixel[3] < 100)
 		{
-			drawString("click pe planeta " + std::to_string(pixel[3]), pixel[1], pixel[2]);
+			curr_text = "click pe planeta " + std::to_string(pixel[3]);
+		}
+		else
+		{
+			curr_text = "";
 		}
 	}
 
 	//draw frameBuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sceneShader->use();
 	glActiveTexture(GL_TEXTURE0);
@@ -283,8 +293,8 @@ void display()
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, pingpong[!horizontal]->colorBuffer);
 
-	quad->draw();*/
-	drawString("text aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 0, 0);
+	quad->draw();
+	drawString(curr_text, mouseClickX, W_HEIGHT - mouseClickY, W_WIDTH);
 	clicked = false;
 
 	glutSwapBuffers();
@@ -354,22 +364,24 @@ void mouseCallback(int x, int y)
 	lastX = x;
 	lastY = y;
 
-	/*if (xoffset < 0)
-	{
-		camera->rotate(LEFT, (int)abs(xoffset));
+	if (!paused) {
+		if (xoffset < 0)
+		{
+			camera->rotate(LEFT, (int)abs(xoffset));
+		}
+		else
+		{
+			camera->rotate(RIGHT, (int)abs(xoffset));
+		}
+		if (yoffset < 0)
+		{
+			camera->rotate(DOWN, (int)abs(yoffset));
+		}
+		else
+		{
+			camera->rotate(UP, (int)abs(yoffset));
+		}
 	}
-	else
-	{
-		camera->rotate(RIGHT, (int)abs(xoffset));
-	}
-	if (yoffset < 0)
-	{
-		camera->rotate(DOWN, (int)abs(yoffset));
-	}
-	else
-	{
-		camera->rotate(UP, (int)abs(yoffset));
-	}*/
 }
 
 void mouseClick(int button, int state, int x, int y)

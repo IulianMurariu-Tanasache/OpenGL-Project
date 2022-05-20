@@ -1,7 +1,8 @@
 #include "Object.h"
 
-Object::Object(std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj)
+Object::Object(unsigned int id, std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj)
 {
+	this->id = id;
 	baseData = component;
 	this->texture = texture;
 	this->vaoObj = vaoObj;
