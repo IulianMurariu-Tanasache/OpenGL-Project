@@ -13,6 +13,7 @@
 #include <iostream>
 #include "stb_image.h"
 #include "DrawString.h"
+#include "PlanetsTexts.h"
 
 #define W_WIDTH 1024
 #define W_HEIGHT 720
@@ -34,7 +35,7 @@
 	-calcul modelviewprojection matrix in shader + normalMatrix tot in shadeR??
 	-jumatate de soare in loc de tot soarele - optimizare ???n
 */
-
+void drawString(unsigned int x, unsigned int y);
 int mouseClickX=0, mouseClickY=0;
 bool clicked = false;
 bool paused = false;
@@ -116,6 +117,7 @@ void allocPlanets()
 
 void init()
 {
+	initTexts();
 	glewInit();
 
 	camera = std::make_unique<Camera>(W_WIDTH, W_HEIGHT, glm::vec3(0, 60, 70), 40.0f);
@@ -245,7 +247,7 @@ void display()
 			planetObject.drawObject();
 		}
 	}
-
+	
 	//bloom->nu face nimic pe nvidia cred...
 	bool horizontal = true, first_iteration = true;
 	unsigned int amount = 10;
@@ -267,14 +269,18 @@ void display()
 		glReadBuffer(GL_COLOR_ATTACHMENT2);
 
 		unsigned int pixel[4] = {0,0,0,0};
-		glReadPixels(mouseClickX, W_HEIGHT - mouseClickY, 1, 1, GL_RGBA_INTEGER, GL_UNSIGNED_INT, &pixel);
+		glReadPixels(mouseClickX, W_HEIGHT - mouseClickY - 1, 1, 1, GL_RGBA_INTEGER, GL_UNSIGNED_INT, &pixel);
 
 		glReadBuffer(GL_NONE);
 		std::cout << "Clicked!->" << pixel[3] << " at " << pixel[1] << " " << pixel[2] << '\n';
 
 		if (pixel[3] > 0 && pixel[3] < 100)
 		{
-			curr_text = "click pe planeta " + std::to_string(pixel[3]);
+			if (mapTextsById.count(pixel[3]))
+				curr_text = mapTextsById[pixel[3]];
+			else
+				curr_text = "click pe planeta " + std::to_string(pixel[3]);
+			paused = true;
 		}
 		else
 		{
@@ -283,21 +289,85 @@ void display()
 	}
 
 	//draw frameBuffer
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sceneShader->use();
+	modelMatrix = glm::mat4();
+	//fa shader separat pentru textbox
+	sceneShader->setMat4("mvp", modelMatrix);
+	sceneShader->setInt("da", false);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mainFrameBuffer->colorBuffers[0]);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, pingpong[!horizontal]->colorBuffer);
 
 	quad->draw();
-	drawString(curr_text, mouseClickX, W_HEIGHT - mouseClickY, W_WIDTH);
+	
+	if (curr_text != "")
+	{
+		drawString(mouseClickX, W_HEIGHT - mouseClickY);
+	}
 	clicked = false;
 
 	glutSwapBuffers();
+}
+
+void drawString(unsigned int x, unsigned int y)
+{
+	sceneShader->use();
+	QuadObject smallQuad = QuadObject();
+
+	int lines = 1;
+	for (int i = 0; i < curr_text.size(); ++i)
+	{
+		if (curr_text[i] == '\n')
+			lines++;
+	}
+
+	int string_w = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)curr_text.c_str()) + 10;
+	int string_h = glutBitmapHeight(GLUT_BITMAP_HELVETICA_18) * lines + 10;
+
+	float w = string_w * 1.0f;
+	float h = string_h * 1.0f;
+
+	w = w / W_WIDTH;
+	h = h / W_HEIGHT;
+
+	y += 20;
+
+	if (x + (string_w / 2.0f) > W_WIDTH)
+	{
+		x = W_WIDTH - string_w / 2.0f;
+	}
+	if (y + (string_h / 2.0f) > W_HEIGHT)
+	{
+		y = W_HEIGHT - string_h / 2.0f - 20;
+	}
+	if (x - (string_w / 2.0f) < 0)
+	{
+		x = string_w / 2.0f;
+	}
+	if (y - (string_h / 2.0f) < 0)
+	{
+		y = string_h / 2.0f - 20;
+	}
+
+	float m_x = (x) * 2.0f / (W_WIDTH * 1.0f) - 1.0f;
+	float m_y = (y + 20) * 2.0f / (W_HEIGHT * 1.0f) - 1.0f;
+
+	modelMatrix = glm::mat4();
+	modelMatrix *= glm::translate(glm::vec3(m_x, m_y, -0.5f));
+	modelMatrix *= glm::scale(glm::vec3(w, h, 1.0f));
+	sceneShader->setMat4("mvp", modelMatrix);
+	sceneShader->setInt("da", true);
+	smallQuad.draw();
+
+	glUseProgram(0);
+	glWindowPos2i(x - string_w / 2.0f, y + string_h / 2.0f);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char*)curr_text.c_str());
+	glEnable(GL_LIGHTING);
 }
 
 void reshape(int w, int h)
@@ -343,6 +413,7 @@ void keyboard(unsigned char key, int x, int y)
 	}
 	if (key == 'p') {
 		paused = !paused;
+		curr_text = "";
 	}
 }
 
