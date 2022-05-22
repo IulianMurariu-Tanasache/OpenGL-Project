@@ -168,6 +168,8 @@ void init()
 	mainFrameBuffer->init(W_WIDTH, W_HEIGHT);
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	std::cout << "Avem erori? " << glGetError() << '\n';
 }
 
@@ -294,6 +296,7 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	sceneShader->use();
 	modelMatrix = glm::mat4();
+
 	//fa shader separat pentru textbox
 	sceneShader->setMat4("mvp", modelMatrix);
 	sceneShader->setInt("da", false);
@@ -334,37 +337,27 @@ void drawString(unsigned int x, unsigned int y)
 	w = w / W_WIDTH;
 	h = h / W_HEIGHT;
 
-	y += 20;
-
-	if (x + (string_w / 2.0f) > W_WIDTH)
+	if (x + string_w > W_WIDTH)
 	{
-		x = W_WIDTH - string_w / 2.0f;
+		x = W_WIDTH - string_w;
 	}
-	if (y + (string_h / 2.0f) > W_HEIGHT)
+	if ((int)(y - string_h) < 0)
 	{
-		y = W_HEIGHT - string_h / 2.0f - 20;
-	}
-	if (x - (string_w / 2.0f) < 0)
-	{
-		x = string_w / 2.0f;
-	}
-	if (y - (string_h / 2.0f) < 0)
-	{
-		y = string_h / 2.0f - 20;
+		y = string_h;
 	}
 
 	float m_x = (x) * 2.0f / (W_WIDTH * 1.0f) - 1.0f;
-	float m_y = (y + 20) * 2.0f / (W_HEIGHT * 1.0f) - 1.0f;
+	float m_y = (y) * 2.0f / (W_HEIGHT * 1.0f) - 1.0f;
 
 	modelMatrix = glm::mat4();
-	modelMatrix *= glm::translate(glm::vec3(m_x, m_y, -0.5f));
+	modelMatrix *= glm::translate(glm::vec3(m_x + w, m_y - h, -0.5f));
 	modelMatrix *= glm::scale(glm::vec3(w, h, 1.0f));
 	sceneShader->setMat4("mvp", modelMatrix);
 	sceneShader->setInt("da", true);
 	smallQuad.draw();
 
 	glUseProgram(0);
-	glWindowPos2i(x - string_w / 2.0f, y + string_h / 2.0f);
+	glWindowPos2i(x , y - 20);
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char*)curr_text.c_str());
 	glEnable(GL_LIGHTING);
