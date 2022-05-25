@@ -1,8 +1,5 @@
 .git
 .vs
 x64
-*.sln
 *.VC.db
 *.aps
-*.vcxproj
-*.vcxproj.*

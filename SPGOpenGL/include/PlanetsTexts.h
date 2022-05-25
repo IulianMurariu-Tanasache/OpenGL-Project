@@ -41,34 +41,34 @@ const std::string marsText =
 
 const std::string jupiterText =
 "JUPITER\nLength of year : 4.333 Earth Days\nMoons : >75; Planet-type: Gas Giant\n"
-"Jupiter has a long history of surprising scientists:\n"
-"all the way back to 1610 when Galileo Galilei\n"
-"found the first moons beyond Earth.\n"
-"That discovery changed the way we see the universe.\n"
-"Fifth in line from the Sun, Jupiter is the largest planet \n"
-"in the solar system – more than twice as massive as all the other planets combined.";
+"Fifth in line from the Sun, Jupiter \n"
+"is the largest planet in the solar system:\n"
+"twice as massive as all the other planets combined.\n"
+"Jupiter’s iconic Great Red Spot is a giant storm \n"
+"bigger than Earth that has raged for hundreds of years.";
 
 const std::string saturnText =
 "SATURN\nLength of year: 10.759 Earth Days\nMoons: ~82; Planet-type: Gas Giant\n"
 "Saturn is the sixth planet from the Sun and\n"
 "the second-largest planet in our solar system.\n"
-"Saturn is unique among the planets.It is not the\n"
-"only planet to have rings – made of chunks of iceand rock,\n"
-"but none are as spectacular or as complicated as Saturn's.";
+"It is not the only planet to have rings:\n"
+"made of chunks of iceand rock,but none are\n"
+"as spectacular or as complicated as Saturn's.";
 
 const std::string uranusText =
 "URANUS\nLength of year: 30.687 Earth Days\nMoons: 27; Planet-type: Ice Giant\n"
 "Uranus is the seventh planet from the Sun\n"
-"and has the third-largest diameter in our solar system.\n"
-"It was the first planet found with the aid of a telescope,\n";
+"and has the third-largest diameter in \n"
+"our solar system. It was the first\n"
+"planet found with the aid of a telescope,\n";
 
 const std::string neptuneTxet =
 "NEPTUNE\nLength of year: 60.190 Earth Days\nMoons: 14; Planet-type: Ice Giant\n"
 "Dark, cold, and whipped by supersonic winds\n"
 "ice giant Neptune is the eighth and most distant\n"
-"planet in our solar system.More than 30 times as\n"
-"far from the Sun as Earth, Neptune is the only planet\n"
-"in our solar system not visible to the naked eye.";
+"planet in our solar system. Neptune is the\n"
+"only planet in our solar system not visible\n"
+"to the naked eye.";
 
 std::map<int, std::string> mapTextsById;
 

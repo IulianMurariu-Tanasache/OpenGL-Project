@@ -12,7 +12,6 @@
 #include <time.h>
 #include <iostream>
 #include "stb_image.h"
-#include "DrawString.h"
 #include "PlanetsTexts.h"
 
 #define W_WIDTH 1024
@@ -22,18 +21,16 @@
 #define FPS 60
 
 #define AU 9.0f //astronomical unit
-#define ORBIT_SPEED PI / 2000 
+#define ORBIT_SPEED PI / 3000 
 #define EARTH_AXIS_ROTATION PI / 80
 #define SUN_OFFSET 6.0f
-#define EARTH_SCALE 0.5f
+#define EARTH_SCALE 2.0f
 
 /*
-	-make vbo and vao more generic ???
-	-cratere pe planete - Normal mapping
-	-eclipse - umbre ??
-	-adaugat inclinatie la planete ?
-	-calcul modelviewprojection matrix in shader + normalMatrix tot in shadeR??
-	-jumatate de soare in loc de tot soarele - optimizare ???n
+	- cratere pe planete - Normal mapping
+	- UI pentru control
+	- calcul modelviewprojection matrix in shader + normalMatrix tot in shadeR??
+	- jumatate de soare in loc de tot soarele - optimizare ???n
 */
 void drawString(unsigned int x, unsigned int y);
 int mouseClickX=0, mouseClickY=0;
