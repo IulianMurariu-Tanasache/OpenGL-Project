@@ -19,12 +19,26 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="imgui\glfw3.h" />
+    <ClInclude Include="imgui\glfw3native.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="imgui\imgui_impl_glut.h" />
+    <ClInclude Include="imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="imgui\imgui_impl_win32.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\imstb_rectpack.h" />
+    <ClInclude Include="imgui\imstb_textedit.h" />
+    <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="include\BoundingSphere.h" />
     <ClInclude Include="include\BoundingVolume.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\FlyweightObjectComponent.h" />
     <ClInclude Include="include\FrameBuffer.h" />
     <ClInclude Include="include\Frustrum.h" />
+    <ClInclude Include="include\InputManager.h" />
     <ClInclude Include="include\MainFrameBuffer.h" />
     <ClInclude Include="include\Plane.h" />
     <ClInclude Include="include\Object.h" />
@@ -54,11 +68,21 @@
     <None Include="shaders\sunShader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\imgui-1.87\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_impl_glut.cpp" />
+    <ClCompile Include="imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="imgui\imgui_tables.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="srcs\BoundingSphere.cpp" />
     <ClCompile Include="srcs\Camera.cpp" />
     <ClCompile Include="srcs\FlyweightObjectComponent.cpp" />
     <ClCompile Include="srcs\FrameBuffer.cpp" />
     <ClCompile Include="srcs\Frustrum.cpp" />
+    <ClCompile Include="srcs\InputManager.cpp" />
     <ClCompile Include="srcs\main.cpp" />
     <ClCompile Include="srcs\MainFrameBuffer.cpp" />
     <ClCompile Include="srcs\Object.cpp" />
@@ -137,13 +161,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\AnuIII\SPG\SPG_Proiect\OpenGL-Project\SPGOpenGL\imgui;include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>freeglutd.lib;glew32d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;glfw3_mt.lib;glfw3dll.lib;freeglutd.lib;glew32d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>F:\AnuIII\SPG\SPG_Proiect\OpenGL-Project\SPGOpenGL\imgui;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

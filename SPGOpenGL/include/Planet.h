@@ -19,7 +19,7 @@ class Planet : public Object {
 			axisRotAngleInc(_axisRotAngleInc), orbitDist(_orbitDist),
 			orbitAngle(_orbitAngle), orbitAngleInc(_orbitAngleInc),
 			Object(id,component, texture, vaoObj){}
-		void move() override;
+		void move(float speed = 1.0f) override;
 		glm::highp_mat4 rotateAroundAxis();
 		glm::highp_mat4 rotateAroundOrbit();
 		glm::highp_mat4 moveOnOrbit();

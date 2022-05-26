@@ -1,9 +1,9 @@
 #include "Planet.h"
 
-void Planet::move()
+void Planet::move(float speed)
 {
-	axisRotAngle += axisRotAngleInc;
-	orbitAngle += orbitAngleInc;
+	axisRotAngle += axisRotAngleInc * speed;
+	orbitAngle += orbitAngleInc * speed;
 }
 
 glm::highp_mat4 Planet::inclineAxis() {

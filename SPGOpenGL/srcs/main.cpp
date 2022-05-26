@@ -8,32 +8,33 @@
 #include "QuadObject.h"
 #include "FrameBuffer.h"
 #include "MainFrameBuffer.h"
+#include "InputManager.h"
 #include <stack>
 #include <time.h>
 #include <iostream>
 #include "stb_image.h"
 #include "PlanetsTexts.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
-#define W_WIDTH 1024
-#define W_HEIGHT 720
+#define W_WIDTH 1064
+#define W_HEIGHT 800
 
 #define PI glm::pi<float>()
 #define FPS 60
 
 #define AU 9.0f //astronomical unit
-#define ORBIT_SPEED PI / 3000 
+#define ORBIT_SPEED PI / 2500 
 #define EARTH_AXIS_ROTATION PI / 80
 #define SUN_OFFSET 6.0f
-#define EARTH_SCALE 2.0f
+#define EARTH_SCALE 0.5f
 
 /*
 	- cratere pe planete - Normal mapping
-	- UI pentru control
-	- calcul modelviewprojection matrix in shader + normalMatrix tot in shadeR??
-	- jumatate de soare in loc de tot soarele - optimizare ???n
 */
-void drawString(unsigned int x, unsigned int y);
-int mouseClickX=0, mouseClickY=0;
+
+unsigned int mouseClickX=0, mouseClickY=0;
 bool clicked = false;
 bool paused = false;
 
@@ -61,10 +62,15 @@ std::stack<glm::mat4> modelStack;
 
 std::string curr_text = "";
 
+InputManager inputManager;
+
 int frame_count = 0;
 int start_time, final_time;
 int deltaTime = 0;	// Time between current frame and last frame
 int lastFrameTime = 0; // Time of last frame
+
+float scale_global = 1.0f;
+float speed_global = 1.0f;
 
 void allocPlanets()
 {
@@ -167,7 +173,26 @@ void init()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	std::cout << "Avem erori? " << glGetError() << '\n';
+}
+
+static bool show_demo_window = true;
+static bool show_another_window = false;
+static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+void my_display_code()
+{
+	IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context. Refer to examples app!");
+
+	ImGui::Begin("UI");
+
+	ImGui::SliderFloat("Size", &scale_global, 0, 10.0f);
+	ImGui::SliderFloat("Speed", &speed_global, 0, 2.0f);
+
+	ImGui::Text(curr_text.c_str());
+
+	ImGui::End();
 }
 
 void display()
@@ -177,6 +202,7 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	//draw skybox
+	
 	glDisable(GL_CULL_FACE);
 	glDepthMask(GL_FALSE);
 	skyboxShader->use();
@@ -186,7 +212,8 @@ void display()
 	skyboxShader->setMat4("view", view);
 
 	skybox->draw();
-
+	
+	
 	//draw rest of the scene
 	glDepthMask(GL_TRUE);
 	glEnable(GL_CULL_FACE);
@@ -199,9 +226,7 @@ void display()
 	//draw sun
 	sunShader->use();
 
-	if (!paused) {
-		sun->move();
-	}
+	sun->move(speed_global);
 	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 	modelMatrix *= sun->rotateAroundOrbit();
 	modelMatrix *= sun->moveOnOrbit();
@@ -224,9 +249,7 @@ void display()
 	planetShader->setVec3("viewPos", camera->cameraPos);
 
 	for (Planet& planetObject : planets) {
-		if (!paused) {
-			planetObject.move();
-		}
+		planetObject.move(speed_global);
 		modelMatrix = glm::mat4();
 		modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 		modelMatrix *= planetObject.rotateAroundOrbit();
@@ -234,7 +257,7 @@ void display()
 		modelMatrix *= planetObject.inclineAxis();
 		modelMatrix *= planetObject.rotateAroundAxis();
 		scale = planetObject.scale;
-		modelMatrix *= glm::scale(scale);
+		modelMatrix *= glm::scale(scale * scale_global);
 
 		planetShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
 		planetShader->setMat4("modelM", modelMatrix);
@@ -281,10 +304,6 @@ void display()
 				curr_text = "click pe planeta " + std::to_string(pixel[3]);
 			paused = true;
 		}
-		else
-		{
-			curr_text = "";
-		}
 	}
 
 	//draw frameBuffer
@@ -306,66 +325,12 @@ void display()
 	
 	if (curr_text != "")
 	{
-		drawString(mouseClickX, W_HEIGHT - mouseClickY);
+		//drawString(mouseClickX, W_HEIGHT - mouseClickY);
 	}
 	clicked = false;
-
-	glutSwapBuffers();
 }
 
-void drawString(unsigned int x, unsigned int y)
-{
-	sceneShader->use();
-	QuadObject smallQuad = QuadObject();
-
-	int lines = 1;
-	for (int i = 0; i < curr_text.size(); ++i)
-	{
-		if (curr_text[i] == '\n')
-			lines++;
-	}
-
-	int string_w = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)curr_text.c_str()) + 10;
-	int string_h = glutBitmapHeight(GLUT_BITMAP_HELVETICA_18) * lines + 10;
-
-	float w = string_w * 1.0f;
-	float h = string_h * 1.0f;
-
-	w = w / W_WIDTH;
-	h = h / W_HEIGHT;
-
-	if (x + string_w > W_WIDTH)
-	{
-		x = W_WIDTH - string_w;
-	}
-	if ((int)(y - string_h) < 0)
-	{
-		y = string_h;
-	}
-
-	float m_x = (x) * 2.0f / (W_WIDTH * 1.0f) - 1.0f;
-	float m_y = (y) * 2.0f / (W_HEIGHT * 1.0f) - 1.0f;
-
-	modelMatrix = glm::mat4();
-	modelMatrix *= glm::translate(glm::vec3(m_x + w, m_y - h, -0.5f));
-	modelMatrix *= glm::scale(glm::vec3(w, h, 1.0f));
-	sceneShader->setMat4("mvp", modelMatrix);
-	sceneShader->setInt("da", true);
-	smallQuad.draw();
-
-	glUseProgram(0);
-	glWindowPos2i(x , y - 20);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	glutBitmapString(GLUT_BITMAP_HELVETICA_18, (unsigned char*)curr_text.c_str());
-	glEnable(GL_LIGHTING);
-}
-
-void reshape(int w, int h)
-{
-	glViewport(0, 0, w, h);
-}
-
-void frameFunc(int) {
+void frameFunc() {
 	frame_count++;
 	int currentFrame = glutGet(GLUT_ELAPSED_TIME);
 	deltaTime = currentFrame - lastFrameTime;
@@ -377,43 +342,54 @@ void frameFunc(int) {
 		frame_count = 0;
 		start_time = final_time;
 	}
-	glutPostRedisplay();
-	glutTimerFunc(1000 / FPS, frameFunc, 0);
 }
 
-void keyboard(unsigned char key, int x, int y)
+void keyboard()
 {
-	if (key == 'q') {
+	if (inputManager.getKeyStatus(GLFW_KEY_Q)) {
 		camera->move(UP, deltaTime);
 	}
-	if (key == 'e') {
+	if (inputManager.getKeyStatus(GLFW_KEY_E)) {
 		camera->move(DOWN, deltaTime);
 	}
-	if (key == 'a') {
+	if (inputManager.getKeyStatus(GLFW_KEY_A)) {
 		camera->move(LEFT, deltaTime);
 	}
-	if (key == 'd') {
+	if (inputManager.getKeyStatus(GLFW_KEY_D)) {
 		camera->move(RIGHT, deltaTime);
 	}
-	if (key == 'w') {
+	if (inputManager.getKeyStatus(GLFW_KEY_W)) {
 		camera->move(FORWARDS, deltaTime);
 	}
-	if (key == 's') {
+	if (inputManager.getKeyStatus(GLFW_KEY_S)) {
 		camera->move(BACKWARDS, deltaTime);
 	}
-	if (key == 'p') {
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (inputManager.getKeyStatus(GLFW_KEY_P)) {
 		paused = !paused;
 		curr_text = "";
 	}
 }
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		inputManager.getMousePos(mouseClickX, mouseClickY);
+		clicked = true;
+	}
+}
+
 bool firstMouse = true;
+
 void mouseCallback(int x, int y)
 {
 	static int lastX, lastY;
 	if (firstMouse)
 	{
-		glutWarpPointer(W_WIDTH / 2.0f, W_HEIGHT / 2.0f);
 		lastX = x = W_WIDTH / 2.0f;
 		lastY = y = W_HEIGHT / 2.0f;
 
@@ -445,34 +421,92 @@ void mouseCallback(int x, int y)
 	}
 }
 
-void mouseClick(int button, int state, int x, int y)
+static void glfw_error_callback(int error, const char* description)
 {
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-	{
-		mouseClickX = x;
-		mouseClickY = y;
-		clicked = true;
-	}
+	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
 int main(int argc, char** argv)
 {
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowPosition(100, 200);
-	glutInitWindowSize(W_WIDTH, W_HEIGHT);
-	glutCreateWindow("Cel mai engine grafic");
+	GLFWwindow* window;
+
+	glfwSetErrorCallback(glfw_error_callback);
+	if (!glfwInit())
+		return 0;
+
+	window = glfwCreateWindow(W_WIDTH, W_HEIGHT, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+	if (window == NULL)
+		return 0;
+
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1); // Enable vsync
+
+	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.DisplaySize = ImVec2(1000, 600);
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
 	init();
 
-	glutDisplayFunc(display);
-	glutReshapeFunc(reshape);
-	glutKeyboardFunc(keyboard);
-	start_time = time(NULL);
-	glutTimerFunc(1000.0f / FPS, frameFunc, 0);
-	glutPassiveMotionFunc(mouseCallback);
-	glutMotionFunc(mouseCallback);
-	glutMouseFunc(mouseClick);
-	glutMainLoop();
+	while (!glfwWindowShouldClose(window))
+	{
+		// Poll and handle events (inputs, window resize, etc.)
+		// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+		// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
+		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+		frameFunc();
+		glfwPollEvents();
+
+		inputManager.pollEvents(window);
+		keyboard();
+
+		unsigned int x, y;
+		inputManager.getMousePos(x, y);
+		mouseCallback(x, y);
+
+		ImGuiIO& io = ImGui::GetIO();
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		my_display_code();
+
+		////Rendering
+		ImGui::Render();
+		int display_w, display_h;
+		glfwGetFramebufferSize(window, &display_w, &display_h);
+		glViewport(0, 0, display_w, display_h);
+		//glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+		glClear(GL_COLOR_BUFFER_BIT);
+		io.WantCaptureMouse = false;
+		display();
+
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		glfwSwapBuffers(window);
+	}
+
+	// Cleanup
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
 
 	return 0;
 }
