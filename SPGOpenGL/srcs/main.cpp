@@ -24,11 +24,11 @@
 #define PI glm::pi<float>()
 #define FPS 60
 
-#define AU 9.0f //astronomical unit
+#define AU 8.0f //astronomical unit
 #define ORBIT_SPEED PI / 2500 
 #define EARTH_AXIS_ROTATION PI / 80
-#define SUN_OFFSET 6.0f
-#define EARTH_SCALE 0.5f
+#define SUN_OFFSET 9.0f
+#define EARTH_SCALE 1.0f
 
 /*
 	- cratere pe planete - Normal mapping
@@ -37,6 +37,7 @@
 unsigned int mouseClickX=0, mouseClickY=0;
 bool clicked = false;
 bool paused = false;
+bool firstMouse = true;
 
 std::unique_ptr<MainFrameBuffer> mainFrameBuffer;
 
@@ -69,8 +70,12 @@ int start_time, final_time;
 int deltaTime = 0;	// Time between current frame and last frame
 int lastFrameTime = 0; // Time of last frame
 
-float scale_global = 1.0f;
-float speed_global = 1.0f;
+int id_selected = 0;
+
+float scale_multiplier = 1.0f;
+float speed_multiplier = 1.0f;
+float dist_multiplier = 1.0f;
+bool centeredPlanet = false;
 
 void allocPlanets()
 {
@@ -98,7 +103,7 @@ void allocPlanets()
 	//planets.push_back(Planet(sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0));
 	//planets.back().scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
 	sun = std::make_unique<Planet>(1, sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0);
-	sun->scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
+	sun->scale = glm::vec3(10.0f * EARTH_SCALE, 10.0f * EARTH_SCALE, 10.0f * EARTH_SCALE);
 
 	planets.push_back(Planet(2, sphereComp, mercuryTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 40.0f, 0.4f * AU + SUN_OFFSET, 0, 47.0f * ORBIT_SPEED)); //mercury
 	planets.back().scale = glm::vec3((1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE);
@@ -187,10 +192,42 @@ void my_display_code()
 
 	ImGui::Begin("UI");
 
-	ImGui::SliderFloat("Size", &scale_global, 0, 10.0f);
-	ImGui::SliderFloat("Speed", &speed_global, 0, 2.0f);
+	std::string mouse_cuplat = "Mouse prins de camera!";
+	if (paused)
+		mouse_cuplat = "Mouse liber!";
+	else
+		mouse_cuplat = "Mouse prins de camera!";
 
-	ImGui::Text(curr_text.c_str());
+	ImGui::Text(mouse_cuplat.c_str());
+	ImGui::SliderFloat("Size", &scale_multiplier, 0, 10.0f);
+	ImGui::SliderFloat("Speed", &speed_multiplier, 0, 2.0f);
+	ImGui::SliderFloat("Distance", &dist_multiplier, 0, 5.0f);
+
+	if (id_selected > 0)
+	{
+		ImGui::Text(curr_text.c_str());
+		if (ImGui::Button("Go to planet", ImVec2(0, 0)))
+		{
+
+			Planet* selected_planet;
+			if (id_selected == 1)
+				selected_planet = sun.get();
+			else {
+				selected_planet = &(planets.at(id_selected - 2));
+			}
+
+			glm::vec3 pos, size;
+			selected_planet->getGlobalDimensions(pos, size);
+			pos.z += 9 * size.z;
+			paused = true;
+			firstMouse = true;
+			camera->cameraPos = pos;
+			camera->rotate(RIGHT, 90.0f);
+			camera->rotate(UP, 0.0f);
+			camera->rotate(FORWARDS, 0.0f);
+			centeredPlanet = true;
+		}
+	}
 
 	ImGui::End();
 }
@@ -226,14 +263,14 @@ void display()
 	//draw sun
 	sunShader->use();
 
-	sun->move(speed_global);
+	sun->move(speed_multiplier);
 	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 	modelMatrix *= sun->rotateAroundOrbit();
 	modelMatrix *= sun->moveOnOrbit();
 	modelMatrix *= sun->inclineAxis();
 	modelMatrix *= sun->rotateAroundAxis();
 	scale = sun->scale;
-	modelMatrix *= glm::scale(scale);
+	modelMatrix *= glm::scale(scale * scale_multiplier);
 
 	sunShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
 
@@ -249,15 +286,16 @@ void display()
 	planetShader->setVec3("viewPos", camera->cameraPos);
 
 	for (Planet& planetObject : planets) {
-		planetObject.move(speed_global);
+		planetObject.move(speed_multiplier * (!(id_selected == planetObject.id && centeredPlanet == true)));
 		modelMatrix = glm::mat4();
 		modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
 		modelMatrix *= planetObject.rotateAroundOrbit();
-		modelMatrix *= planetObject.moveOnOrbit();
+		modelMatrix *= planetObject.moveOnOrbit(dist_multiplier); //* (scale_multiplier));
 		modelMatrix *= planetObject.inclineAxis();
 		modelMatrix *= planetObject.rotateAroundAxis();
+		planetObject.modelMatrix = modelMatrix;
 		scale = planetObject.scale;
-		modelMatrix *= glm::scale(scale * scale_global);
+		modelMatrix *= glm::scale(scale * scale_multiplier);
 
 		planetShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
 		planetShader->setMat4("modelM", modelMatrix);
@@ -299,10 +337,18 @@ void display()
 		if (pixel[3] > 0 && pixel[3] < 100)
 		{
 			if (mapTextsById.count(pixel[3]))
+			{
 				curr_text = mapTextsById[pixel[3]];
+				id_selected = pixel[3];
+				paused = true;
+				firstMouse = true;
+			}
 			else
+			{
 				curr_text = "click pe planeta " + std::to_string(pixel[3]);
-			paused = true;
+				id_selected = 0;
+			}
+	
 		}
 	}
 
@@ -371,6 +417,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (inputManager.getKeyStatus(GLFW_KEY_P)) {
 		paused = !paused;
 		curr_text = "";
+		centeredPlanet = false;
+		if (paused)
+			firstMouse = true;
 	}
 }
 
@@ -382,8 +431,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		clicked = true;
 	}
 }
-
-bool firstMouse = true;
 
 void mouseCallback(int x, int y)
 {

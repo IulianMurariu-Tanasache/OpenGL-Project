@@ -12,7 +12,6 @@ class Camera {
 		const float rotationSpeed = 0.17f;
 		float fov, aspect, zNear, zFar;
 		glm::vec3 rotationVec3;
-
 		void calcDirection();
 
 	public:
@@ -28,6 +27,7 @@ class Camera {
 		void move(Direction dir, int deltaTime);
 		void rotate(Direction dir, int offset);
 		void rotate(Direction dir, float angle);
+		void calcFrustrum();
 		glm::mat4 getViewMatrix();
 		glm::mat4 getProjectionMatrix();
 };

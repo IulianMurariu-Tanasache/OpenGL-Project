@@ -42,7 +42,7 @@ Camera::Camera(int w, int h, glm::vec3 initPos, float initPitch, float fov, floa
 	this->aspect = (float)w / h;
 
 	this->rotate(DOWN, initPitch);
-	this->rotate(LEFT, 90.0f);
+	this->rotate(RIGHT, 90.0f);
 
 	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
 }
@@ -80,29 +80,32 @@ void Camera::move(Direction dir, int deltaTime)
 	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
 }
 
-
+void Camera::calcFrustrum()
+{
+	frustrum = new Frustrum(cameraPos, cameraFront, cameraRight, cameraUp, zNear, zFar, aspect, fov);
+}
 
 void Camera::rotate(Direction dir, float angle)
 {
 	switch (dir)
 	{
 	case FORWARDS:
-		rotationVec3.x -= angle;
+		rotationVec3.x = -angle;
 		break;
 	case BACKWARDS:
-		rotationVec3.x += angle;
+		rotationVec3.x = angle;
 		break;
 	case UP:
-		rotationVec3.y += angle;
+		rotationVec3.y = angle;
 		break;
 	case DOWN:
-		rotationVec3.y -= angle;
+		rotationVec3.y = -angle;
 		break;
 	case LEFT:
-		rotationVec3.z -= angle;
+		rotationVec3.z = angle;
 		break;
 	case RIGHT:
-		rotationVec3.z += angle;
+		rotationVec3.z = -angle;
 		break;
 	}
 	calcDirection();

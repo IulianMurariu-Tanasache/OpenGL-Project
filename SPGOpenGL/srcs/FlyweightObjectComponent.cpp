@@ -68,7 +68,6 @@ FlyweightObjectComponent::~FlyweightObjectComponent()
 	std::cout << "DELETE VBO" << '\n';
 }
 
-
 std::size_t FlyweightObjectComponent::getDataSize()
 {
 	return vertexVec.size() * sizeof(Vertex);

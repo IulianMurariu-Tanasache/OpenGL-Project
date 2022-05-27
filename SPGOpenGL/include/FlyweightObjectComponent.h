@@ -12,7 +12,6 @@ class FlyweightObjectComponent {
 
 	public:
 		BoundingSphere* baseVolume = nullptr; //shared_ptr?
-
 		~FlyweightObjectComponent();
 		void loadOBJFile(const char* fileName);
 		std::size_t getDataSize();
