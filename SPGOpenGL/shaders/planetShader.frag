@@ -61,9 +61,29 @@ vec3 lighting(vec3 fpos, vec3 normal, vec3 viewPos,
 		float attenuation = (LIGHT_CONSTANT + pow(2, -1.0f * log(dist)) / LIGHT_LINEAR);
 		ambientColor  *= attenuation;
 		diffuseColor  *= attenuation;
-		specularColor *= attenuation;
 		col = col + ( ambientColor + diffuseColor + specularColor ); 
 	}
+
+	//camera lumina
+	vec3 L = normalize(viewPos - pos);
+	vec3 V = normalize(viewPos - pos);
+	vec3 N = normalize(normal);
+	vec3 R = normalize(reflect(-L, N));
+
+	float diffCoef = max(dot(L,N),0) * SAMPLES;
+	float dotSpec = max(dot(R,V),0);
+	float specCoef = pow(dotSpec, specPower);
+
+	vec3 ambientColor = ambient * SAMPLES * lightColor;
+	vec3 diffuseColor = diffCoef * lightColor;
+	vec3 specularColor = specCoef * SAMPLES * specular * lightColor;
+
+	float dist = length(viewPos - pos);
+	float attenuation = 1.0 / (1.0f + 0.22f * dist + 0.20f * (dist * dist));  
+	ambientColor  *= attenuation;
+	diffuseColor  *= attenuation;
+	specularColor *= attenuation;
+	col = col + (diffuseColor + specularColor ); 
 
 	return clamp(col, 0, 1);
 }
@@ -74,8 +94,8 @@ void main()
 	vec4 textureColor = texture(currentTexture, textCoord);
 	vec3 lightColor = vec3(1.0, 1.0, 1.0);
 	vec3 ambient = vec3(3.0f / SAMPLES);
-	vec3 specular = vec3(0.7f / SAMPLES);
-	float specPower = 32;
+	vec3 specular = vec3(7.0f / SAMPLES);
+	float specPower = 64;
 	
 	vec3 color = lighting(fpos, normal, viewPos, ambient, lightColor, specular, specPower);
 		
