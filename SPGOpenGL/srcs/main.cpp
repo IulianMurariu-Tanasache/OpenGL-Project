@@ -30,10 +30,6 @@
 #define SUN_OFFSET 9.5f
 #define EARTH_SCALE 1.2f
 
-/*
-	- cratere pe planete - Normal mapping
-*/
-
 unsigned int mouseClickX=0, mouseClickY=0;
 bool clicked = false;
 bool paused = false;
@@ -306,6 +302,13 @@ void my_display_code()
 	ImGui::SliderFloat("Speed", &speed_multiplier, 0, 2.0f);
 	ImGui::SliderFloat("Distance", &dist_multiplier, 0, 5.0f);
 
+	if (ImGui::Button("Reset Camera", ImVec2(0, 0)))
+	{
+		camera->cameraPos = glm::vec3(0, 60, 70);
+		camera->rotate(DOWN, 40.0f);
+		camera->rotate(RIGHT, 90.0f);
+	}
+
 	if (id_selected > 0)
 	{
 		ImGui::Text(curr_text.c_str());
@@ -325,6 +328,7 @@ void my_display_code()
 
 			glm::vec3 pos, size;
 			selected_planet->getGlobalDimensions(pos, size);
+			size *= scale_multiplier;
 			pos.z += 9 * size.z;
 			paused = true;
 			firstMouse = true;
