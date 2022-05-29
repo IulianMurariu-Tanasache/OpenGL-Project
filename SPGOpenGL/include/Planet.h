@@ -7,10 +7,10 @@ class Planet : public Object {
 		float axisInclineAngle; //inclinarea axei verticale
 		float axisRotAngleInc; // valoarea cu care se incrementeaza unghiul (de ex la apasarea unei taste)
 		float orbitAngleInc; // valoarea cu care se incrementeaza unghiul (de ex la apasarea unei taste)
-
-	public:
 		float orbitDist; // distanta fata de centrul orbitei
 		float orbitAngle; // unghiul de rotatie pe orbita
+
+	public:
 		Planet( unsigned int id,
 			std::shared_ptr<FlyweightObjectComponent> component, std::shared_ptr<Texture> texture, std::shared_ptr<VAOObject> vaoObj,
 			float _axisInclineAngle, float _axisRotAngleInc,
@@ -19,6 +19,7 @@ class Planet : public Object {
 			axisRotAngleInc(_axisRotAngleInc), orbitDist(_orbitDist),
 			orbitAngle(_orbitAngle), orbitAngleInc(_orbitAngleInc),
 			Object(id,component, texture, vaoObj){}
+		std::vector<Planet> sattelites;
 		void move(float multiplier = 1.0f) override;
 		glm::highp_mat4 rotateAroundAxis();
 		glm::highp_mat4 rotateAroundOrbit();

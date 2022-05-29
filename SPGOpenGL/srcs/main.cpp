@@ -24,11 +24,11 @@
 #define PI glm::pi<float>()
 #define FPS 60
 
-#define AU 8.0f //astronomical unit
-#define ORBIT_SPEED PI / 2500 
+#define AU 10.5f //astronomical unit
+#define ORBIT_SPEED PI / 3000 
 #define EARTH_AXIS_ROTATION PI / 80
-#define SUN_OFFSET 9.0f
-#define EARTH_SCALE 1.0f
+#define SUN_OFFSET 9.5f
+#define EARTH_SCALE 1.2f
 
 /*
 	- cratere pe planete - Normal mapping
@@ -84,7 +84,6 @@ void allocPlanets()
 	sphereComp->loadOBJFile("obj/sfera-fina.obj");
 
 	//load textures
-	std::shared_ptr<Texture> planetMoonTexture = std::make_shared<Texture>("textures/planet_moon.jpg");
 	std::shared_ptr<Texture> sunTexture = std::make_shared<Texture>("textures/sun.jpg");
 	std::shared_ptr<Texture> mercuryTexture = std::make_shared<Texture>("textures/mercury.jpg");
 	std::shared_ptr<Texture> venusTexture = std::make_shared<Texture>("textures/venus.jpg");
@@ -95,6 +94,17 @@ void allocPlanets()
 	std::shared_ptr<Texture> uranusTexture = std::make_shared<Texture>("textures/uranus.jpg");
 	std::shared_ptr<Texture> neptuneTexture = std::make_shared<Texture>("textures/neptune.jpg");
 
+	//sateliti
+	std::shared_ptr<Texture> moonTexture = std::make_shared<Texture>("textures/planet_moon.jpg");
+	std::shared_ptr<Texture> phobosTexture = std::make_shared<Texture>("textures/phobos.jpg");
+	std::shared_ptr<Texture> deimosTexture = std::make_shared<Texture>("textures/deimos.jpg");
+	std::shared_ptr<Texture> ioTexture = std::make_shared<Texture>("textures/io.jpg");
+	std::shared_ptr<Texture> callistoTexture = std::make_shared<Texture>("textures/callisto.jpg");
+	std::shared_ptr<Texture> europaTexture = std::make_shared<Texture>("textures/europa.jpg");
+	std::shared_ptr<Texture> iapetusTexture = std::make_shared<Texture>("textures/iapetus.jpg");
+	std::shared_ptr<Texture> titanTexture = std::make_shared<Texture>("textures/titan.jpg");
+	std::shared_ptr<Texture> titaniaTexture = std::make_shared<Texture>("textures/titania.jpg");
+
 	//create VAO
 	std::shared_ptr<VAOObject> vaoObj = std::make_shared<VAOObject>();
 
@@ -103,24 +113,117 @@ void allocPlanets()
 	//planets.push_back(Planet(sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0));
 	//planets.back().scale = glm::vec3(14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE, 14.0f * EARTH_SCALE);
 	sun = std::make_unique<Planet>(1, sphereComp, sunTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 200.0f, 0, 0, 0);
-	sun->scale = glm::vec3(10.0f * EARTH_SCALE, 10.0f * EARTH_SCALE, 10.0f * EARTH_SCALE);
+	sun->scale = glm::vec3(8.5f * EARTH_SCALE, 8.5f * EARTH_SCALE, 8.5f * EARTH_SCALE);
 
-	planets.push_back(Planet(2, sphereComp, mercuryTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 40.0f, 0.4f * AU + SUN_OFFSET, 0, 47.0f * ORBIT_SPEED)); //mercury
+	planets.push_back(Planet(2, sphereComp, mercuryTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 40.0f, 0.5f * AU + SUN_OFFSET, 0, 47.0f * ORBIT_SPEED)); //mercury
 	planets.back().scale = glm::vec3((1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE, (1 / 2.0f) * EARTH_SCALE);
-	planets.push_back(Planet(3, sphereComp, venusTexture, vaoObj, 177, -1.0f * (EARTH_AXIS_ROTATION / 100.0f), 0.7f * AU + SUN_OFFSET, 0, 35.02f * ORBIT_SPEED)); //venus
+	planets.push_back(Planet(3, sphereComp, venusTexture, vaoObj, 177, -1.0f * (EARTH_AXIS_ROTATION / 100.0f), 0.8f * AU + SUN_OFFSET, 0, 35.02f * ORBIT_SPEED)); //venus
 	planets.back().scale = glm::vec3(1 * EARTH_SCALE, 1 * EARTH_SCALE, 1 * EARTH_SCALE);
+	
+	//earth
 	planets.push_back(Planet(4, sphereComp, earthTexture, vaoObj, 23, EARTH_AXIS_ROTATION, AU + SUN_OFFSET, 0, 29.78f * ORBIT_SPEED)); //earth
-	planets.back().scale = glm::vec3(1 * EARTH_SCALE, 1 * EARTH_SCALE, 1 * EARTH_SCALE);
-	planets.push_back(Planet(5 ,sphereComp, marsTexture, vaoObj, 25, EARTH_AXIS_ROTATION, 1.5f * AU + SUN_OFFSET, 0, 26.5f * ORBIT_SPEED)); //mars
-	planets.back().scale = glm::vec3((1 / 1.3f) * EARTH_SCALE, (1 / 1.3f) * EARTH_SCALE, (1 / 1.3f) * EARTH_SCALE);
-	planets.push_back(Planet(6, sphereComp, jupiterTexture, vaoObj, 3, EARTH_AXIS_ROTATION * 2.4f, 5.0f * AU + SUN_OFFSET, 0, 13.06f * ORBIT_SPEED)); //jupiter
-	planets.back().scale = glm::vec3(4.2f * EARTH_SCALE, 4.2f * EARTH_SCALE, 4.2f * EARTH_SCALE);
-	planets.push_back(Planet(7, sphereComp, saturnTexture, vaoObj, 27, EARTH_AXIS_ROTATION * 2.2f, 7.5f * AU + SUN_OFFSET, 0, 10 * ORBIT_SPEED)); //saturn
-	planets.back().scale = glm::vec3(3.35f * EARTH_SCALE, 3.35f * EARTH_SCALE, 3.35f * EARTH_SCALE);
-	planets.push_back(Planet(8, sphereComp, uranusTexture, vaoObj, 98, EARTH_AXIS_ROTATION * 1.4f, 9.8f * AU + SUN_OFFSET, 0, 7.11f * ORBIT_SPEED)); //uranus
-	planets.back().scale = glm::vec3(1.6f * EARTH_SCALE, 1.6f * EARTH_SCALE, 1.6f * EARTH_SCALE);
-	planets.push_back(Planet(9, sphereComp, neptuneTexture, vaoObj, 28, EARTH_AXIS_ROTATION * 1.5f, 11.1f * AU + SUN_OFFSET, 0, 5.43f * ORBIT_SPEED)); //neptune
-	planets.back().scale = glm::vec3(1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE);
+	Planet& earth = planets.back();
+	earth.scale = glm::vec3(1 * EARTH_SCALE, 1 * EARTH_SCALE, 1 * EARTH_SCALE);
+
+	//moon
+	Planet moon = Planet(41, sphereComp, moonTexture, vaoObj, 0, EARTH_AXIS_ROTATION / 15.0f, AU / 2.6f, 0, 12.0f * ORBIT_SPEED);
+	moon.scale = glm::vec3((1 / 2.2f) * EARTH_SCALE, (1 / 2.2f) * EARTH_SCALE, (1 / 2.2f) * EARTH_SCALE);
+	earth.sattelites.push_back(moon);
+
+	//mars
+	planets.push_back(Planet(5 ,sphereComp, marsTexture, vaoObj, 25, EARTH_AXIS_ROTATION, 1.8f * AU + SUN_OFFSET, 0, 26.5f * ORBIT_SPEED)); //mars
+	Planet& mars = planets.back();
+	mars.scale = glm::vec3((1 / 1.1f) * EARTH_SCALE, (1 / 1.1f) * EARTH_SCALE, (1 / 1.1f) * EARTH_SCALE);
+
+	//phobos
+	Planet phobos = Planet(51, sphereComp, phobosTexture, vaoObj, 15, EARTH_AXIS_ROTATION / 15.0f, AU / 2.25f, 60, ORBIT_SPEED * 10.0f);
+	phobos.scale = glm::vec3((1 / 3.0f) * EARTH_SCALE, (1 / 3.0f) * EARTH_SCALE, (1 / 3.0f) * EARTH_SCALE);
+	mars.sattelites.push_back(phobos);
+
+	//deimos
+	Planet deimos = Planet(52, sphereComp, deimosTexture, vaoObj, 19, EARTH_AXIS_ROTATION / 32.0f, AU / 2.0f, 25, ORBIT_SPEED * 30.0f);
+	deimos.scale = glm::vec3((1 / 2.75f) * EARTH_SCALE, (1 / 2.75f) * EARTH_SCALE, (1 / 2.75f) * EARTH_SCALE);
+	mars.sattelites.push_back(deimos);
+
+	//jupiter
+	planets.push_back(Planet(6, sphereComp, jupiterTexture, vaoObj, 3, EARTH_AXIS_ROTATION * 2.0f, 3.5f * AU + SUN_OFFSET, 0, 13.06f * ORBIT_SPEED)); //jupiter
+	Planet& jupiter = planets.back();
+	jupiter.scale = glm::vec3(3.8f * EARTH_SCALE, 3.8f * EARTH_SCALE, 3.8f * EARTH_SCALE);
+
+	//io
+	Planet io = Planet(61, sphereComp, ioTexture, vaoObj, -12, EARTH_AXIS_ROTATION / 42.0f, AU / 1.5f, 15, ORBIT_SPEED * 45.0f);
+	io.scale = glm::vec3(EARTH_SCALE / 1.8f);
+	jupiter.sattelites.push_back(io);
+
+	//callisto
+	Planet callisto = Planet(62, sphereComp, callistoTexture, vaoObj, 2, EARTH_AXIS_ROTATION / 26.0f, AU, 29, ORBIT_SPEED * 11.0f);
+	callisto.scale = glm::vec3(EARTH_SCALE / 1.1f);
+	jupiter.sattelites.push_back(callisto);
+
+	//europa
+	Planet europa = Planet(63, sphereComp, europaTexture, vaoObj, 21, EARTH_AXIS_ROTATION / 30.0f, AU * 1.5f, 55, ORBIT_SPEED * 26.0f);
+	europa.scale = glm::vec3(EARTH_SCALE / 1.5f);
+	jupiter.sattelites.push_back(europa);
+
+	//saturn
+	planets.push_back(Planet(7, sphereComp, saturnTexture, vaoObj, 27, EARTH_AXIS_ROTATION * 2.2f, 5.5f * AU + SUN_OFFSET, 0, 10 * ORBIT_SPEED)); //saturn
+	Planet& saturn = planets.back();
+	saturn.scale = glm::vec3(3.15f * EARTH_SCALE, 3.15f * EARTH_SCALE, 3.15f * EARTH_SCALE);
+
+	//titan
+	Planet titan = Planet(71, sphereComp, titanTexture, vaoObj, 5, EARTH_AXIS_ROTATION / 38.0f, AU, 55, ORBIT_SPEED * 19.0f);
+	titan.scale = glm::vec3(EARTH_SCALE * 1.2f);
+	saturn.sattelites.push_back(titan);
+
+	//iapetus
+	Planet iapetus = Planet(72, sphereComp, europaTexture, vaoObj, 50, EARTH_AXIS_ROTATION / 40.0f, AU * 1.85f, 10, ORBIT_SPEED * 12.0f);
+	iapetus.scale = glm::vec3(EARTH_SCALE / 1.35f);
+	saturn.sattelites.push_back(iapetus);
+
+	//uranus
+	planets.push_back(Planet(8, sphereComp, uranusTexture, vaoObj, 98, EARTH_AXIS_ROTATION * 1.4f, 7.8f * AU + SUN_OFFSET, 0, 7.11f * ORBIT_SPEED)); //uranus
+	Planet& uranus = planets.back();
+	uranus.scale = glm::vec3(1.5f * EARTH_SCALE, 1.5f * EARTH_SCALE, 1.5f * EARTH_SCALE);
+
+	//titania
+	Planet titania = Planet(81, sphereComp, titaniaTexture, vaoObj, 36, EARTH_AXIS_ROTATION / 30.0f, AU, 0, ORBIT_SPEED * 34.0f);
+	titania.scale = glm::vec3(EARTH_SCALE / 1.22f);
+	uranus.sattelites.push_back(titania);
+
+	//neptune
+	planets.push_back(Planet(9, sphereComp, neptuneTexture, vaoObj, 28, EARTH_AXIS_ROTATION * 1.5f, 8.81f * AU + SUN_OFFSET, 0, 5.43f * ORBIT_SPEED)); //neptune
+	Planet& neptune = planets.back();
+	neptune.scale = glm::vec3(1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE, 1.61f * EARTH_SCALE);
+}
+
+void drawPlanet(Planet& planetObject, const glm::mat4& modelM)
+{
+	glm::vec3 scale = { 1,1,1 };
+
+	glm::mat4 modelMatrix = modelM;
+	planetObject.move(speed_multiplier * (!(id_selected == planetObject.id && centeredPlanet == true)));
+	modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
+	modelMatrix *= planetObject.rotateAroundOrbit();
+	modelMatrix *= planetObject.moveOnOrbit(dist_multiplier); //* (scale_multiplier));
+
+	//sateliti
+	modelStack.push(modelMatrix);
+
+	modelMatrix *= planetObject.inclineAxis();
+	modelMatrix *= planetObject.rotateAroundAxis();
+	planetObject.modelMatrix = modelMatrix;
+	scale = planetObject.scale;
+	modelMatrix *= glm::scale(scale * scale_multiplier);
+
+	planetShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
+	planetShader->setMat4("modelM", modelMatrix);
+	planetShader->setMat4("normalMatrix", glm::transpose(glm::inverse(modelMatrix)));
+	planetShader->setInt("id", planetObject.id);
+
+	if (planetObject.getBaseData().baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
+	{
+		planetObject.drawObject();
+	}
 }
 
 void init()
@@ -213,7 +316,11 @@ void my_display_code()
 			if (id_selected == 1)
 				selected_planet = sun.get();
 			else {
-				selected_planet = &(planets.at(id_selected - 2));
+				if(id_selected < 10)
+					selected_planet = &(planets.at(id_selected - 2));
+				else {
+					selected_planet = &(planets.at((id_selected / 10) - 2).sattelites.at((id_selected % 10) - 1));
+				}
 			}
 
 			glm::vec3 pos, size;
@@ -250,7 +357,6 @@ void display()
 
 	skybox->draw();
 	
-	
 	//draw rest of the scene
 	glDepthMask(GL_TRUE);
 	glEnable(GL_CULL_FACE);
@@ -286,26 +392,14 @@ void display()
 	planetShader->setVec3("viewPos", camera->cameraPos);
 
 	for (Planet& planetObject : planets) {
-		planetObject.move(speed_multiplier * (!(id_selected == planetObject.id && centeredPlanet == true)));
-		modelMatrix = glm::mat4();
-		modelMatrix *= glm::translate(glm::vec3(0, 1, 0));
-		modelMatrix *= planetObject.rotateAroundOrbit();
-		modelMatrix *= planetObject.moveOnOrbit(dist_multiplier); //* (scale_multiplier));
-		modelMatrix *= planetObject.inclineAxis();
-		modelMatrix *= planetObject.rotateAroundAxis();
-		planetObject.modelMatrix = modelMatrix;
-		scale = planetObject.scale;
-		modelMatrix *= glm::scale(scale * scale_multiplier);
-
-		planetShader->setMat4("modelViewProjectionMatrix", camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix);
-		planetShader->setMat4("modelM", modelMatrix);
-		planetShader->setMat4("normalMatrix", glm::transpose(glm::inverse(modelMatrix)));
-		planetShader->setInt("id", planetObject.id);
-
-		if (planetObject.getBaseData().baseVolume->isOnFrustrum(*camera->frustrum, modelMatrix, scale))
+		
+		drawPlanet(planetObject, glm::mat4());
+		for (Planet& satteliteObject : planetObject.sattelites)
 		{
-			planetObject.drawObject();
+			drawPlanet(satteliteObject, modelStack.top());
+			modelStack.pop();
 		}
+		modelStack.pop();
 	}
 	
 	//bloom->nu face nimic pe nvidia cred...
